@@ -1,18 +1,53 @@
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LogOut, Plus, Search, ShieldCheck, UserRound } from "lucide-react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { apiBaseUrl } from "../config";
 import { getErrorMessage, useCurrentUser, useLogout } from "../hooks/useAuth";
 import { initials } from "../lib/format";
 
 export function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = useCurrentUser();
   const logout = useLogout();
   const user = currentUser.data;
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const currentSearchQuery =
+    location.pathname === "/" ? new URLSearchParams(location.search).get("q")?.trim() || "" : "";
+  const [searchText, setSearchText] = useState(currentSearchQuery);
+
+  useEffect(() => {
+    setSearchText(currentSearchQuery);
+  }, [currentSearchQuery]);
+
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName;
+      if (target?.isContentEditable || tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT") {
+        return;
+      }
+
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    }
+
+    document.addEventListener("keydown", handleShortcut);
+    return () => document.removeEventListener("keydown", handleShortcut);
+  }, []);
 
   async function handleLogout() {
     await logout.mutateAsync();
     navigate("/");
+  }
+
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const query = searchText.trim();
+    navigate(query ? `/?q=${encodeURIComponent(query)}` : "/");
   }
 
   return (
@@ -31,11 +66,18 @@ export function AppLayout() {
           <NavLink to="/me/agents">Agents</NavLink>
         </nav>
 
-        <div className="searchShell" aria-label="Search placeholder">
+        <form className="searchShell" role="search" onSubmit={handleSearchSubmit}>
           <Search size={15} />
-          <span>Search questions, agents, tags...</span>
+          <input
+            aria-label="Search questions"
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search questions..."
+            ref={searchInputRef}
+            type="search"
+            value={searchText}
+          />
           <kbd>/</kbd>
-        </div>
+        </form>
 
         <div className="topbarActions">
           <Link to="/ask" className="button buttonPrimary buttonCompact">

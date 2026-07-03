@@ -171,6 +171,24 @@ main {
   font-size: 13px;
 }
 
+.searchShell input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.searchShell input::placeholder {
+  color: var(--faint);
+}
+
+.searchShell input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
 .searchShell span {
   min-width: 0;
   overflow: hidden;
@@ -459,7 +477,7 @@ main {
   overflow-x: auto;
 }
 
-.feedTabs span {
+.feedTabs a {
   color: var(--muted);
   font-size: 13px;
   padding: 7px 12px;
@@ -568,14 +586,6 @@ main {
   color: var(--blue);
 }
 
-.questionExcerpt {
-  margin: 0;
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
 .tagRow,
 .capabilityList {
   display: flex;
@@ -672,12 +682,158 @@ main {
   font-size: clamp(27px, 4vw, 42px);
 }
 
-.detailQuestion p {
-  margin: 0 0 16px;
+.markdownContent {
   color: var(--text);
   font-size: 15px;
   line-height: 1.75;
   overflow-wrap: anywhere;
+}
+
+.markdownContent > :first-child {
+  margin-top: 0;
+}
+
+.markdownContent > :last-child {
+  margin-bottom: 0;
+}
+
+.markdownContent p,
+.markdownContent ul,
+.markdownContent ol,
+.markdownContent blockquote,
+.markdownContent pre,
+.markdownContent table {
+  margin: 0 0 14px;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  padding-left: 22px;
+}
+
+.markdownContent li + li {
+  margin-top: 4px;
+}
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3,
+.markdownContent h4 {
+  margin: 16px 0 8px;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.markdownContent h1 {
+  font-size: 24px;
+}
+
+.markdownContent h2 {
+  font-size: 20px;
+}
+
+.markdownContent h3 {
+  font-size: 17px;
+}
+
+.markdownContent h4 {
+  font-size: 15px;
+}
+
+.markdownContent a {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.markdownContent code {
+  border-radius: 3px;
+  background: var(--surface-3);
+  color: var(--ink);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.92em;
+  padding: 1px 4px;
+}
+
+.markdownContent pre {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2);
+  padding: 12px;
+}
+
+.markdownContent pre code {
+  display: block;
+  background: transparent;
+  padding: 0;
+  white-space: pre;
+}
+
+.markdownContent blockquote {
+  border-left: 3px solid var(--blue);
+  color: var(--ink-2);
+  padding-left: 12px;
+}
+
+.markdownContent img {
+  display: block;
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.markdownContent table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.markdownContent th,
+.markdownContent td {
+  border: 1px solid var(--line);
+  padding: 7px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdownContent th {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.markdownContentBody {
+  margin-bottom: 16px;
+}
+
+.markdownContentExcerpt {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.markdownContentExcerpt p,
+.markdownContentExcerpt ul,
+.markdownContentExcerpt ol,
+.markdownContentExcerpt blockquote,
+.markdownContentExcerpt pre {
+  margin-bottom: 10px;
+}
+
+.markdownContentExcerpt h1,
+.markdownContentExcerpt h2,
+.markdownContentExcerpt h3,
+.markdownContentExcerpt h4 {
+  margin: 10px 0 6px;
+  font-size: 15px;
+}
+
+.markdownContentExcerpt pre {
+  max-height: 160px;
 }
 
 .sectionHeader {
@@ -777,13 +933,23 @@ main {
   font-size: 14px;
 }
 
-.answerBody p {
+.answerBody > p {
   margin: 12px 0 14px;
   color: var(--ink-2);
   font-size: 14.5px;
   line-height: 1.75;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.answerBody .markdownContentBody {
+  margin: 12px 0 14px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.answerBody .markdownContent p {
+  white-space: pre-wrap;
 }
 
 .answerActions {

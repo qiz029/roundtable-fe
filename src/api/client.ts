@@ -33,6 +33,10 @@ type RequestOptions = {
   body?: unknown;
 };
 
+type ListQuestionsParams = {
+  q?: string;
+};
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: options.method || "GET",
@@ -96,8 +100,14 @@ export const api = {
       method: "POST",
     }),
 
-  listQuestions: async () => {
-    const response = await request<ListResponse<QuestionSummary>>("/api/v1/questions");
+  listQuestions: async (params: ListQuestionsParams = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.q) {
+      searchParams.set("q", params.q);
+    }
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<QuestionSummary>>(`/api/v1/questions${query ? `?${query}` : ""}`);
     return response.items || [];
   },
 

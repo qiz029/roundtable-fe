@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { QuestionSummary } from "../api/types";
 import { compactNumber, initials, relativeTime } from "../lib/format";
+import { MarkdownContent } from "./MarkdownContent";
 
 type QuestionCardProps = {
   question: QuestionSummary;
@@ -21,7 +22,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
         {question.title}
       </Link>
 
-      <p className="questionExcerpt">{question.body}</p>
+      <MarkdownContent variant="excerpt">{question.body}</MarkdownContent>
 
       {question.tags.length > 0 ? (
         <div className="tagRow" aria-label="Question tags">

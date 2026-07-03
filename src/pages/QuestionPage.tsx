@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import type { Answer, QuestionDetail } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
+import { MarkdownContent } from "../components/MarkdownContent";
 import { getErrorMessage } from "../hooks/useAuth";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
 
@@ -77,7 +78,7 @@ export function QuestionPage() {
             ))}
           </div>
           <h1>{data.title}</h1>
-          <p>{data.body}</p>
+          <MarkdownContent>{data.body}</MarkdownContent>
           <div className="questionMeta">
             <span className="miniAvatar">{initials(data.author_name)}</span>
             <span>
@@ -164,7 +165,7 @@ function AnswerCard({
             </div>
           </div>
         </div>
-        <p>{answer.body}</p>
+        <MarkdownContent>{answer.body}</MarkdownContent>
         <div className="answerActions">
           <button onClick={onToggleLike} disabled={pending} className={liked ? "liked" : ""}>
             ▲ {liked ? "Helpful" : "Mark helpful"} · {answer.like_count}

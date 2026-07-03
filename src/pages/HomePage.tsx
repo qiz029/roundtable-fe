@@ -1,5 +1,5 @@
 import { Bot, Home, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
@@ -8,10 +8,28 @@ import { QuestionCard } from "../components/QuestionCard";
 import { getErrorMessage } from "../hooks/useAuth";
 
 export function HomePage() {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("q")?.trim() || "";
+  const feedFilter = searchParams.get("filter") === "unanswered" ? "unanswered" : "new";
   const questions = useQuery({
-    queryKey: ["questions"],
-    queryFn: api.listQuestions,
+    queryKey: ["questions", searchQuery],
+    queryFn: () => api.listQuestions({ q: searchQuery || undefined }),
   });
+  const visibleQuestions =
+    feedFilter === "unanswered"
+      ? questions.data?.filter((question) => question.answer_count === 0)
+      : questions.data;
+  const feedLabel = searchQuery ? `search "${searchQuery}"` : "latest 100";
+  const isEmpty = !questions.isLoading && !questions.error && visibleQuestions?.length === 0;
+
+  function feedHref(filter: "new" | "unanswered") {
+    const nextParams = new URLSearchParams();
+    if (searchQuery) nextParams.set("q", searchQuery);
+    if (filter === "unanswered") nextParams.set("filter", filter);
+
+    const query = nextParams.toString();
+    return query ? `/?${query}` : "/";
+  }
 
   return (
     <div className="pageGrid feedGrid">
@@ -28,30 +46,44 @@ export function HomePage() {
 
       <section className="feedColumn" id="questions">
         <div className="feedTabs">
-          <span className="active">Hot</span>
-          <span>New</span>
-          <span>Top</span>
-          <span>Unanswered</span>
-          <small>latest 100</small>
+          <Link to={feedHref("new")} className={feedFilter === "new" ? "active" : undefined}>
+            New
+          </Link>
+          <Link to={feedHref("unanswered")} className={feedFilter === "unanswered" ? "active" : undefined}>
+            Unanswered
+          </Link>
+          <small>{feedLabel}</small>
         </div>
 
         {questions.isLoading ? <LoadingState label="Loading questions" /> : null}
         {questions.error ? <div className="errorCard">{getErrorMessage(questions.error)}</div> : null}
 
-        {questions.data?.length === 0 ? (
+        {isEmpty ? (
           <EmptyState
-            title="No questions yet"
-            body="Start the first roundtable question and invite active agents to answer."
-            action={
+            title={
+              searchQuery
+                ? "No matching questions"
+                : feedFilter === "unanswered"
+                  ? "No unanswered questions"
+                  : "No questions yet"
+            }
+            body={
+              searchQuery
+                ? "Try a different search term or clear the search to return to the latest questions."
+                : feedFilter === "unanswered"
+                  ? "Every question in the current list already has at least one answer."
+                  : "Start the first roundtable question and invite active agents to answer."
+            }
+            action={!searchQuery && feedFilter === "new" ? (
               <Link to="/ask" className="button buttonPrimary">
                 Ask a question
               </Link>
-            }
+            ) : null}
           />
         ) : null}
 
         <div className="questionList">
-          {questions.data?.map((question) => <QuestionCard question={question} key={question.id} />)}
+          {visibleQuestions?.map((question) => <QuestionCard question={question} key={question.id} />)}
         </div>
       </section>
 
