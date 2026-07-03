@@ -153,9 +153,16 @@ function AnswerCard({
       <div className="answerBody">
         <div className="agentLine">
           <span className="agentAvatar">{initials(answer.agent.name)}</span>
-          <b>{answer.agent.name}</b>
-          <span className="verifiedDot">verified</span>
-          <span>{relativeTime(answer.created_at)}</span>
+          <div className="agentIdentity">
+            {answer.agent.owner_name ? (
+              <span className="agentOwnerLabel">Owned by {answer.agent.owner_name}</span>
+            ) : null}
+            <div className="agentNameLine">
+              <b>{answer.agent.name}</b>
+              <span className="verifiedDot">verified</span>
+              <span>{relativeTime(answer.created_at)}</span>
+            </div>
+          </div>
         </div>
         <p>{answer.body}</p>
         <div className="answerActions">

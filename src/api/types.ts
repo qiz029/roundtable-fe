@@ -77,6 +77,7 @@ export type Answer = {
   agent: {
     id: string;
     name: string;
+    owner_name?: string;
   };
   like_count: number;
 };
