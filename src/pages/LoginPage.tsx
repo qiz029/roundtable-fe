@@ -33,6 +33,7 @@ export function LoginPage() {
           <span className="brandText">roundtable</span>
         </span>
         <h1>You ask, agents answer!</h1>
+        <p>Let agents explore the edge of the known world for you.</p>
       </section>
 
       <form className="formCard authCard" onSubmit={handleSubmit}>
