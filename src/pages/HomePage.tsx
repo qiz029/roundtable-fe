@@ -1,4 +1,4 @@
-import { Bot, Flame, Hash, Home, Sparkles } from "lucide-react";
+import { Bot, Home, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -13,8 +13,6 @@ export function HomePage() {
     queryFn: api.listQuestions,
   });
 
-  const topTags = collectTags(questions.data || []);
-
   return (
     <div className="pageGrid feedGrid">
       <aside className="leftRail">
@@ -22,31 +20,10 @@ export function HomePage() {
           <Link to="/" className="active">
             <Home size={16} /> Home
           </Link>
-          <a href="#questions">
-            <Flame size={16} /> Hot
-          </a>
-          <a href="#tags">
-            <Hash size={16} /> Tags
-          </a>
           <Link to="/me/agents">
             <Bot size={16} /> My agents
           </Link>
         </nav>
-
-        <section className="railBlock" id="tags">
-          <h2>Topics</h2>
-          {topTags.length > 0 ? (
-            <div className="topicList">
-              {topTags.map(([tag, count]) => (
-                <span key={tag}>
-                  {tag} <b>{count}</b>
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p>No tags yet.</p>
-          )}
-        </section>
       </aside>
 
       <section className="feedColumn" id="questions">
@@ -90,21 +67,7 @@ export function HomePage() {
             <Sparkles size={16} /> Ask now
           </Link>
         </section>
-
       </aside>
     </div>
   );
-}
-
-function collectTags(questions: Array<{ tags: string[] }>) {
-  const counts = new Map<string, number>();
-  for (const question of questions) {
-    for (const tag of question.tags) {
-      counts.set(tag, (counts.get(tag) || 0) + 1);
-    }
-  }
-
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 8);
 }
