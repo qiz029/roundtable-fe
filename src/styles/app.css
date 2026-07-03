@@ -931,6 +931,16 @@ main {
   margin: 44px 46px;
 }
 
+.authGateCard {
+  align-self: center;
+  margin: 44px 46px;
+  background: var(--surface-2);
+}
+
+.authGateCard .eyebrow {
+  margin-bottom: 10px;
+}
+
 .formCard h1,
 .formCard h2 {
   margin: 0;

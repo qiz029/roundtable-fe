@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "../api/client";
+import { Link, useNavigate } from "react-router-dom";
+import { api, ApiError } from "../api/client";
+import { LoadingState } from "../components/LoadingState";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { splitTags } from "../lib/format";
 
@@ -23,12 +24,23 @@ export function AskPage() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!currentUser.data) {
+      return;
+    }
+
     createQuestion.mutate({
       title,
       body,
       tags: splitTags(tags),
     });
   }
+
+  const sessionCheckFailed =
+    currentUser.error instanceof ApiError && currentUser.error.status !== 401
+      ? currentUser.error
+      : currentUser.error && !(currentUser.error instanceof ApiError)
+        ? currentUser.error
+        : null;
 
   return (
     <div className="formPage">
@@ -46,37 +58,65 @@ export function AskPage() {
         </div>
       </section>
 
-      <form className="formCard" onSubmit={handleSubmit}>
-        <div>
-          <h2>New question</h2>
-          <p>{currentUser.data ? `Posting as ${currentUser.data.display_name}` : "Log in first to post."}</p>
-        </div>
+      {currentUser.isLoading ? (
+        <section className="formCard authGateCard">
+          <LoadingState label="Checking session" />
+        </section>
+      ) : currentUser.data ? (
+        <form className="formCard" onSubmit={handleSubmit}>
+          <div>
+            <h2>New question</h2>
+            <p>Posting as {currentUser.data.display_name}</p>
+          </div>
 
-        <label>
-          Title
-          <input value={title} onChange={(event) => setTitle(event.target.value)} required />
-        </label>
+          <label>
+            Title
+            <input value={title} onChange={(event) => setTitle(event.target.value)} required />
+          </label>
 
-        <label>
-          Body
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} required rows={9} />
-        </label>
+          <label>
+            Body
+            <textarea value={body} onChange={(event) => setBody(event.target.value)} required rows={9} />
+          </label>
 
-        <label>
-          Tags
-          <input
-            value={tags}
-            onChange={(event) => setTags(event.target.value)}
-            placeholder="rag, retrieval, infra"
-          />
-        </label>
+          <label>
+            Tags
+            <input
+              value={tags}
+              onChange={(event) => setTags(event.target.value)}
+              placeholder="rag, retrieval, infra"
+            />
+          </label>
 
-        {createQuestion.error ? <div className="errorCard">{getErrorMessage(createQuestion.error)}</div> : null}
+          {createQuestion.error ? <div className="errorCard">{getErrorMessage(createQuestion.error)}</div> : null}
 
-        <button className="button buttonPrimary" disabled={createQuestion.isPending}>
-          {createQuestion.isPending ? "Posting..." : "Ask question"}
-        </button>
-      </form>
+          <button className="button buttonPrimary" disabled={createQuestion.isPending}>
+            {createQuestion.isPending ? "Posting..." : "Ask question"}
+          </button>
+        </form>
+      ) : (
+        <section className="formCard authGateCard" aria-labelledby="ask-login-required">
+          <div>
+            <span className="eyebrow">Session required</span>
+            <h2 id="ask-login-required">Log in to ask a question</h2>
+            <p>
+              Question creation is tied to your Roundtable user session. Log in first, then come
+              back to post the question for agents.
+            </p>
+          </div>
+
+          {sessionCheckFailed ? <div className="errorCard">{getErrorMessage(sessionCheckFailed)}</div> : null}
+
+          <div className="formActions">
+            <Link to="/login" className="button buttonPrimary">
+              Log in
+            </Link>
+            <Link to="/register" className="button buttonSecondary">
+              Create account
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
