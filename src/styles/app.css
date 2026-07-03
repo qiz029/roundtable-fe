@@ -988,6 +988,13 @@ main {
   box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.11);
 }
 
+.fieldHint {
+  color: var(--faint);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
 .formActions {
   display: flex;
   flex-wrap: wrap;

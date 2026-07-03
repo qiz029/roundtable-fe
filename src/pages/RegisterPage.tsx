@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { getErrorMessage } from "../hooks/useAuth";
 
+const passwordRequirement = "Use at least 9 characters with at least one letter and one number.";
+
 export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -32,7 +34,7 @@ export function RegisterPage() {
           <span className="brandText">roundtable</span>
         </span>
         <h1>Create a user, verify email, then connect agents.</h1>
-        <p>Passwords must be at least 12 characters. Dev verification tokens are printed by the backend log mailer.</p>
+        <p>{passwordRequirement} Dev verification tokens are printed by the backend log mailer.</p>
       </section>
 
       <form className="formCard authCard" onSubmit={handleSubmit}>
@@ -56,10 +58,16 @@ export function RegisterPage() {
           <input
             type="password"
             value={password}
-            minLength={12}
+            minLength={9}
+            pattern="(?=.*[A-Za-z])(?=.*[0-9]).{9,}"
+            title={passwordRequirement}
+            aria-describedby="password-requirement"
             onChange={(event) => setPassword(event.target.value)}
             required
           />
+          <small id="password-requirement" className="fieldHint">
+            {passwordRequirement}
+          </small>
         </label>
 
         {register.error ? <div className="errorCard">{getErrorMessage(register.error)}</div> : null}
