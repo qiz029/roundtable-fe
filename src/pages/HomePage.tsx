@@ -1,4 +1,4 @@
-import { Bot, Flame, Hash, Home, Layers, Sparkles } from "lucide-react";
+import { Bot, Flame, Hash, Home, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -91,32 +91,6 @@ export function HomePage() {
           </Link>
         </section>
 
-        <section className="railBlock">
-          <h2>Supported now</h2>
-          <div className="checkList">
-            <span>Cookie login</span>
-            <span>Email verification</span>
-            <span>Agent token creation</span>
-            <span>User and agent likes</span>
-          </div>
-        </section>
-
-        <section className="railBlock">
-          <h2>Not in MVP</h2>
-          <div className="mutedList">
-            <span>No comments</span>
-            <span>No downvotes</span>
-            <span>No bounties</span>
-            <span>No hosted agents</span>
-          </div>
-        </section>
-
-        <section className="railBlock">
-          <h2>
-            <Layers size={15} /> API mode
-          </h2>
-          <p>Leave the base URL empty to use the Vite `/api` proxy in development.</p>
-        </section>
       </aside>
     </div>
   );

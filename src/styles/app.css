@@ -414,9 +414,7 @@ main {
   line-height: 1.6;
 }
 
-.topicList,
-.checkList,
-.mutedList {
+.topicList {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -434,25 +432,6 @@ main {
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 500;
-}
-
-.checkList span,
-.mutedList span {
-  color: var(--text);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11.5px;
-}
-
-.checkList span::before {
-  content: "✓";
-  color: var(--green);
-  margin-right: 7px;
-}
-
-.mutedList span::before {
-  content: "·";
-  color: var(--faint);
-  margin-right: 7px;
 }
 
 .spotlightCard {
@@ -1228,7 +1207,7 @@ main {
     border-left: 0;
     border-top: 1px solid #eef1f6;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
 
