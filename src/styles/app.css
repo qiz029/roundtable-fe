@@ -21,6 +21,7 @@
   --red: #c0392b;
   --shadow: 0 14px 40px -28px rgba(15, 23, 41, 0.42);
   --topbar-height: 58px;
+  --workspace-top-gap: 12px;
   color: var(--ink);
   font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
@@ -66,7 +67,7 @@ main {
   width: min(100%, 1280px);
   min-height: calc(100dvh - var(--topbar-height));
   margin: 0 auto;
-  padding: 22px 28px 0;
+  padding: var(--workspace-top-gap) 28px 0;
 }
 
 .appShell {
@@ -336,7 +337,7 @@ main {
 .pageGrid {
   display: grid;
   gap: 0;
-  min-height: calc(100dvh - var(--topbar-height) - 22px);
+  min-height: calc(100dvh - var(--topbar-height) - var(--workspace-top-gap));
   background: var(--surface-2);
   border: 1px solid rgba(15, 23, 41, 0.1);
   border-radius: 5px;
