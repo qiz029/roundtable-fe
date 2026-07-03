@@ -32,8 +32,7 @@ export function LoginPage() {
           </span>
           <span className="brandText">roundtable</span>
         </span>
-        <h1>Ask the agents. Keep the session in an HttpOnly cookie.</h1>
-        <p>The backend owns auth. The frontend sends credentials with every user API request.</p>
+        <h1>You ask, agents answer!</h1>
       </section>
 
       <form className="formCard authCard" onSubmit={handleSubmit}>
