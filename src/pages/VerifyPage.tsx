@@ -1,12 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { getErrorMessage } from "../hooks/useAuth";
 
 export function VerifyPage() {
   const queryClient = useQueryClient();
-  const [token, setToken] = useState("");
+  const [searchParams] = useSearchParams();
+  const queryToken = searchParams.get("token")?.trim() || "";
+  const [token, setToken] = useState(queryToken);
+  const autoSubmittedToken = useRef<string | null>(null);
 
   const verify = useMutation({
     mutationFn: api.verify,
@@ -15,9 +18,21 @@ export function VerifyPage() {
     },
   });
 
+  useEffect(() => {
+    if (!queryToken || autoSubmittedToken.current === queryToken) {
+      return;
+    }
+
+    autoSubmittedToken.current = queryToken;
+    setToken(queryToken);
+    verify.mutate(queryToken);
+  }, [queryToken]);
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    verify.mutate(token);
+    const trimmedToken = token.trim();
+    setToken(trimmedToken);
+    verify.mutate(trimmedToken);
   }
 
   return (
@@ -25,8 +40,11 @@ export function VerifyPage() {
       <form className="formCard" onSubmit={handleSubmit}>
         <div>
           <span className="eyebrow">Email verification</span>
-          <h1>Paste the token from the backend mailer log.</h1>
-          <p>The log mailer prints `verification email=&lt;email&gt; token=&lt;token&gt;` in dev mode.</p>
+          <h1>{queryToken ? "Verifying your email." : "Verify your email."}</h1>
+          <p>
+            Open the verification link from your email, or paste the token printed by the backend
+            log mailer in local development.
+          </p>
         </div>
 
         <label>
@@ -37,12 +55,12 @@ export function VerifyPage() {
         {verify.error ? <div className="errorCard">{getErrorMessage(verify.error)}</div> : null}
         {verify.data?.verified ? (
           <div className="successCard">
-            Email verified. <Link to="/me/agents/new">Connect an agent</Link>
+            Email verified. You can now <Link to="/login">log in</Link>.
           </div>
         ) : null}
 
-        <button className="button buttonPrimary" disabled={verify.isPending}>
-          {verify.isPending ? "Verifying..." : "Verify email"}
+        <button className="button buttonPrimary" disabled={verify.isPending || Boolean(verify.data?.verified)}>
+          {verify.isPending ? "Verifying..." : verify.data?.verified ? "Verified" : "Verify email"}
         </button>
       </form>
     </div>

@@ -34,7 +34,7 @@ export function RegisterPage() {
           <span className="brandText">roundtable</span>
         </span>
         <h1>Create a user, verify email, then connect agents.</h1>
-        <p>{passwordRequirement} Dev verification tokens are printed by the backend log mailer.</p>
+        <p>{passwordRequirement} We will send a verification link before you log in.</p>
       </section>
 
       <form className="formCard authCard" onSubmit={handleSubmit}>
@@ -74,8 +74,8 @@ export function RegisterPage() {
 
         {register.data ? (
           <div className="successCard">
-            Registered {register.data.email}. Check the backend logs for the verification token.
-            <Link to="/verify"> Verify email</Link>
+            Registered {register.data.email}. Open the verification link from your email, then log
+            in. Local dev can also <Link to="/verify">verify with a log token</Link>.
           </div>
         ) : null}
 
