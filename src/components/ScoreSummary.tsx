@@ -8,15 +8,6 @@ type ScoreMetric = {
   value: number;
 };
 
-function formatPenalty(value: number | undefined) {
-  if (!value) return "0";
-  return value < 0 ? formatScore(value) : `-${formatScore(value)}`;
-}
-
-function hasPenalty(value: number | undefined) {
-  return Boolean(value);
-}
-
 function scoreKey(prefix: string, id: string | undefined, rank: number) {
   return id ? `${prefix}-${id}` : `${prefix}-rank-${rank}`;
 }
@@ -40,8 +31,10 @@ function RankCell({ rank }: { rank: number }) {
 }
 
 export function ScoreMetricGrid({ metrics }: { metrics: ScoreMetric[] }) {
+  const columnCount = Math.min(Math.max(metrics.length, 1), 4);
+
   return (
-    <div className="scoreMetricGrid">
+    <div className="scoreMetricGrid" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
       {metrics.map((metric) => (
         <span className="scoreMetric" key={metric.label}>
           <b>{formatScore(metric.value)}</b>
@@ -85,8 +78,16 @@ export function AgentScoreSummary({ score }: { score: AgentScoreItem }) {
   );
 }
 
-export function UserScoreSummary({ score }: { score: UserScoreItem }) {
+export function UserScoreSummary({ score, showPenalty = true }: { score: UserScoreItem; showPenalty?: boolean }) {
   const userName = score.user?.display_name || "Unknown user";
+  const metrics: ScoreMetric[] = [
+    { label: "Owned agents", value: score.owned_agent_score || 0 },
+    { label: "Operator bonus", value: score.operator_bonus || 0 },
+  ];
+
+  if (showPenalty) {
+    metrics.push({ label: "Penalty", value: -Math.abs(score.penalty_score || 0) });
+  }
 
   return (
     <div className="scoreSummary">
@@ -103,13 +104,7 @@ export function UserScoreSummary({ score }: { score: UserScoreItem }) {
         </div>
         <strong>{safeScore(score.total_score)}</strong>
       </div>
-      <ScoreMetricGrid
-        metrics={[
-          { label: "Owned agents", value: score.owned_agent_score || 0 },
-          { label: "Operator bonus", value: score.operator_bonus || 0 },
-          { label: "Penalty", value: -Math.abs(score.penalty_score || 0) },
-        ]}
-      />
+      <ScoreMetricGrid metrics={metrics} />
       {score.details?.top_agent_name ? (
         <p className="scoreDetails">
           Top agent: {score.details.top_agent_name} · {safeScore(score.details.top_agent_score)}
@@ -151,7 +146,6 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
             <th>Answer</th>
             <th>Curation</th>
             <th>Reliability</th>
-            <th>Penalty</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -181,9 +175,6 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
               <td>{safeScore(score.answer_score)}</td>
               <td>{safeScore(score.curation_score)}</td>
               <td>{safeScore(score.reliability_score)}</td>
-              <td className={hasPenalty(score.penalty_score) ? "penaltyCell" : undefined}>
-                {formatPenalty(score.penalty_score)}
-              </td>
               <td className="totalCell">{safeScore(score.total_score)}</td>
             </tr>
           ))}
@@ -205,7 +196,6 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
             <th>Top agent</th>
             <th>Owned agents</th>
             <th>Bonus</th>
-            <th>Penalty</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -234,9 +224,6 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
               <td>{score.details?.top_agent_name || "None"}</td>
               <td>{safeScore(score.owned_agent_score)}</td>
               <td>{safeScore(score.operator_bonus)}</td>
-              <td className={hasPenalty(score.penalty_score) ? "penaltyCell" : undefined}>
-                {formatPenalty(score.penalty_score)}
-              </td>
               <td className="totalCell">{safeScore(score.total_score)}</td>
             </tr>
           ))}

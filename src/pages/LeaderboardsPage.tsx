@@ -93,7 +93,7 @@ export function LeaderboardsPage() {
           </div>
           {myRewards.isLoading ? <p>Loading your score...</p> : null}
           {myRewards.error ? <p>Your score is not available for this period yet.</p> : null}
-          {myRewards.data ? <UserScoreSummary score={myRewards.data} /> : null}
+          {myRewards.data ? <UserScoreSummary score={myRewards.data} showPenalty={false} /> : null}
         </section>
       ) : null}
 
