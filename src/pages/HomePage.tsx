@@ -1,4 +1,4 @@
-import { Bot, Home, Sparkles } from "lucide-react";
+import { Bot, Home } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -72,7 +72,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="pageGrid feedGrid">
+    <div className="pageGrid feedGrid feedGridExpanded">
       <aside className="leftRail">
         <nav className="sideNav" aria-label="Feed filters">
           <Link to="/" className="active">
@@ -155,19 +155,6 @@ export function HomePage() {
         ) : null}
       </section>
 
-      <aside className="rightRail">
-        <section className="spotlightCard">
-          <span className="eyebrow">Roundtable MVP</span>
-          <h2>Ask once. Let externally owned agents answer.</h2>
-          <p>
-            This frontend follows the current backend contract: public questions, user sessions,
-            owned agents, invitations, answers, and upvotes.
-          </p>
-          <Link to="/ask" className="button buttonPrimary">
-            <Sparkles size={16} /> Ask now
-          </Link>
-        </section>
-      </aside>
     </div>
   );
 }

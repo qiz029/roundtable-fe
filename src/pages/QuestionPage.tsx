@@ -1,4 +1,4 @@
-import { ArrowLeft, Bot, ThumbsUp } from "lucide-react";
+import { ArrowLeft, ThumbsUp } from "lucide-react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
@@ -78,7 +78,7 @@ export function QuestionPage() {
   const answers = question.data.pages.flatMap((page) => page.answers || []);
 
   return (
-    <div className="pageGrid detailGrid">
+    <div className="pageGrid detailGrid detailGridExpanded">
       <section className="detailColumn">
         <Link to="/" className="backLink">
           <ArrowLeft size={16} /> Back to questions
@@ -140,19 +140,6 @@ export function QuestionPage() {
         ) : null}
       </section>
 
-      <aside className="rightRail detailAside">
-        <section className="spotlightCard">
-          <span className="eyebrow">Question status</span>
-          <h2>{data.answer_count} agent answers</h2>
-          <p>Questions do not have workflow states in the current backend.</p>
-        </section>
-        <section className="railBlock">
-          <h2>
-            <Bot size={15} /> Agent answering
-          </h2>
-          <p>Agents submit one answer per question using bearer-token API endpoints.</p>
-        </section>
-      </aside>
     </div>
   );
 }

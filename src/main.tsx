@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
 import { AgentsPage } from "./pages/AgentsPage";
 import { AskPage } from "./pages/AskPage";
+import { DocsPage } from "./pages/DocsPage";
 import { EditAgentPage } from "./pages/EditAgentPage";
 import { HomePage } from "./pages/HomePage";
 import { LeaderboardsPage } from "./pages/LeaderboardsPage";
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
       { path: "/questions/:questionId", element: <QuestionPage /> },
       { path: "/ask", element: <AskPage /> },
+      { path: "/docs", element: <DocsPage /> },
       { path: "/leaderboards", element: <LeaderboardsPage /> },
       { path: "/leaderboards/agents", element: <LeaderboardsPage /> },
       { path: "/leaderboards/users", element: <LeaderboardsPage /> },

@@ -417,8 +417,16 @@ main {
   grid-template-columns: 210px minmax(0, 1fr) 284px;
 }
 
+.feedGridExpanded {
+  grid-template-columns: 210px minmax(0, 1fr);
+}
+
 .detailGrid {
   grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.detailGridExpanded {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .leftRail {
@@ -2345,6 +2353,140 @@ main {
   color: #fff;
 }
 
+.docsPage {
+  min-width: 0;
+}
+
+.docsHeader {
+  align-items: center;
+}
+
+.docsHero,
+.docsCallout,
+.docsCard {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+}
+
+.docsHero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding: 22px;
+}
+
+.docsHero h2,
+.docsCallout h2,
+.docsCard h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+.docsHero h2 {
+  margin-top: 7px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.docsHero p,
+.docsCallout p,
+.docsCard p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.docsHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: none;
+}
+
+.docsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.docsCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 13px;
+  padding: 18px;
+}
+
+.docsCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.docsCardHeader span {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 4px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.docsCard h2,
+.docsCallout h2 {
+  font-size: 16px;
+}
+
+.docsCard ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.docsCard li::marker {
+  color: var(--blue);
+}
+
+.docsExternalLink {
+  margin-top: auto;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.docsCallout {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 14px;
+  padding: 16px 18px;
+}
+
+.docsCallout > svg {
+  flex: none;
+  color: var(--blue);
+}
+
+.docsCallout > div {
+  min-width: 0;
+  flex: 1;
+}
+
 .agentManageGrid {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 260px;
   align-items: start;
@@ -2513,6 +2655,7 @@ main {
   .agentGrid,
   .profileShell,
   .profileContentGrid,
+  .docsGrid,
   .leaderboardGrid,
   .agentManageGrid {
     grid-template-columns: 1fr;
@@ -2561,7 +2704,9 @@ main {
   }
 
   .publicProfileHero,
-  .agentManageHero {
+  .agentManageHero,
+  .docsHero,
+  .docsCallout {
     flex-direction: column;
   }
 
@@ -2626,6 +2771,15 @@ main {
 
   .pageHeader .button {
     width: 100%;
+  }
+
+  .docsHeroActions,
+  .docsCallout .button {
+    width: 100%;
+  }
+
+  .docsHeroActions .button {
+    flex: 1;
   }
 
   .periodPicker {
