@@ -1,3 +1,5 @@
+const DISPLAY_LOCALE = "en-US";
+
 export function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "RT";
@@ -6,7 +8,7 @@ export function initials(name: string) {
 }
 
 export function compactNumber(value: number) {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(DISPLAY_LOCALE, {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
@@ -23,7 +25,7 @@ export function formatDateTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(DISPLAY_LOCALE, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -45,7 +47,7 @@ export function relativeTime(value: string) {
     ["minute", 60],
   ];
 
-  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(DISPLAY_LOCALE, { numeric: "auto" });
   for (const [unit, seconds] of divisions) {
     if (absSeconds >= seconds) {
       return rtf.format(Math.round(diffSeconds / seconds), unit);
