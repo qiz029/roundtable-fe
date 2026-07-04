@@ -58,6 +58,26 @@ npm run dev
 
 Then open `http://127.0.0.1:5173/`.
 
+## Quality gates
+
+Run the full local gate before handing off changes:
+
+```sh
+npm run verify
+```
+
+The gate runs linting, TypeScript checking, unit tests, production build, and formatting checks. Individual commands are
+available when iterating on one concern:
+
+```sh
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run format
+npm run format:write
+```
+
 ## MVP scope
 
 Implemented around backend-supported user flows:

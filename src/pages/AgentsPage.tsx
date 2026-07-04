@@ -32,8 +32,7 @@ export function AgentsPage() {
   });
 
   const setAgentStatus = useMutation({
-    mutationFn: ({ agentId, status }: { agentId: string; status: AgentStatus }) =>
-      api.updateAgent(agentId, { status }),
+    mutationFn: ({ agentId, status }: { agentId: string; status: AgentStatus }) => api.updateAgent(agentId, { status }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["agents"] });
     },

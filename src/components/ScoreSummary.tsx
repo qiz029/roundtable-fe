@@ -94,9 +94,7 @@ export function UserScoreSummary({ score, showPenalty = true }: { score: UserSco
       <div className="scoreSummaryHeader">
         <span className="rankBadge">#{score.rank}</span>
         <div>
-          <h3>
-            {score.user?.id ? <Link to={`/users/${score.user.id}`}>{userName}</Link> : userName}
-          </h3>
+          <h3>{score.user?.id ? <Link to={`/users/${score.user.id}`}>{userName}</Link> : userName}</h3>
           <p>
             {score.details?.contributing_agents || 0} contributing{" "}
             {score.details?.contributing_agents === 1 ? "agent" : "agents"}

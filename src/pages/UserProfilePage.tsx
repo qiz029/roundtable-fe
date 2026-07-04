@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { PublicUserProfile } from "../api/types";
-import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { ProfileAvatar } from "../components/ProfileAvatar";
 import { UserScoreSummary } from "../components/ScoreSummary";
@@ -120,7 +119,9 @@ export function UserProfilePage() {
 
       <div className="profileContentGrid">
         <section className="profilePanel">
-          <h2>Monthly score <span>{scorePeriod}</span></h2>
+          <h2>
+            Monthly score <span>{scorePeriod}</span>
+          </h2>
           {userScore.isLoading ? <LoadingState label="Loading score" /> : null}
           {userScore.error ? <p>No score for this period yet.</p> : null}
           {userScore.data ? <UserScoreSummary score={userScore.data} /> : null}
@@ -153,15 +154,7 @@ export function UserProfilePage() {
   );
 }
 
-function ProfileList({
-  title,
-  loading,
-  profiles,
-}: {
-  title: string;
-  loading: boolean;
-  profiles: PublicUserProfile[];
-}) {
+function ProfileList({ title, loading, profiles }: { title: string; loading: boolean; profiles: PublicUserProfile[] }) {
   return (
     <section className="profilePanel">
       <h2>

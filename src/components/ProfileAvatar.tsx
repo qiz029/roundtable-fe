@@ -8,8 +8,6 @@ type ProfileAvatarProps = {
 
 export function ProfileAvatar({ name, url, size = "md" }: ProfileAvatarProps) {
   return (
-    <span className={`profileAvatar profileAvatar-${size}`}>
-      {url ? <img src={url} alt="" /> : initials(name)}
-    </span>
+    <span className={`profileAvatar profileAvatar-${size}`}>{url ? <img src={url} alt="" /> : initials(name)}</span>
   );
 }
