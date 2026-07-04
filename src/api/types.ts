@@ -173,6 +173,34 @@ export type Answer = {
     owner_name?: string;
   };
   like_count: number;
+  comment_count?: number;
+};
+
+export type AnswerComment = {
+  id: string;
+  answer_id: string;
+  body: string;
+  created_at: string;
+  author: {
+    id: string;
+    display_name: string;
+    avatar_url?: string;
+  };
+  reply_to_comment_id?: string;
+  reply_to?: {
+    id: string;
+    author_display_name: string;
+  };
+};
+
+export type CreateAnswerCommentRequest = {
+  body: string;
+  reply_to_comment_id?: string;
+};
+
+export type DeleteAnswerCommentResult = {
+  comment_id: string;
+  deleted: boolean;
 };
 
 export type AnswerFeedItem = {

@@ -4,12 +4,13 @@ import type { InfiniteData } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import type { Answer, QuestionDetail } from "../api/types";
+import type { Answer, QuestionDetail, User } from "../api/types";
+import { AnswerComments } from "../components/AnswerComments";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { PillList } from "../components/Pill";
-import { getErrorMessage } from "../hooks/useAuth";
+import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
 import { answerAnchorId, questionIdFromRouteParam, questionPath } from "../lib/routes";
@@ -24,6 +25,7 @@ export function QuestionPage() {
   const [likedAnswers, setLikedAnswers] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
   const questionQueryKey = ["question", routeQuestionId, "answers"] as const;
+  const currentUser = useCurrentUser();
 
   const question = useInfiniteQuery({
     queryKey: questionQueryKey,
@@ -151,6 +153,24 @@ export function QuestionPage() {
     },
   });
 
+  function updateAnswerCommentCount(answerId: string, delta: number) {
+    queryClient.setQueryData<InfiniteData<QuestionDetail>>(questionQueryKey, (current) => {
+      if (!current) return current;
+
+      return {
+        ...current,
+        pages: current.pages.map((page) => ({
+          ...page,
+          answers: page.answers?.map((answer) =>
+            answer.id === answerId
+              ? { ...answer, comment_count: Math.max(0, (answer.comment_count ?? 0) + delta) }
+              : answer,
+          ),
+        })),
+      };
+    });
+  }
+
   if (question.isLoading) {
     return (
       <div className="pageNarrow">
@@ -211,6 +231,8 @@ export function QuestionPage() {
                 onToggleLike={() =>
                   likeMutation.mutate({ answerId: answer.id, liked: Boolean(likedAnswers[answer.id]) })
                 }
+                currentUser={currentUser.data}
+                onCommentCountChange={(delta) => updateAnswerCommentCount(answer.id, delta)}
               />
             ))}
           </div>
@@ -238,11 +260,15 @@ function AnswerCard({
   liked,
   pending,
   onToggleLike,
+  currentUser,
+  onCommentCountChange,
 }: {
   answer: Answer;
   liked: boolean;
   pending: boolean;
   onToggleLike: () => void;
+  currentUser?: User;
+  onCommentCountChange: (delta: number) => void;
 }) {
   return (
     <article className="answerCard" id={answerAnchorId(answer.id)}>
@@ -273,6 +299,12 @@ function AnswerCard({
           </button>
           <span>created {formatDateTime(answer.created_at)}</span>
         </div>
+        <AnswerComments
+          answerId={answer.id}
+          commentCount={answer.comment_count}
+          currentUser={currentUser}
+          onCommentCountChange={onCommentCountChange}
+        />
       </div>
     </article>
   );

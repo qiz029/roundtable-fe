@@ -159,6 +159,79 @@ describe("api client", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/v1/feed/answers?limit=10&offset=20", expect.any(Object));
   });
 
+  it("builds answer comment list, create, and delete requests", async () => {
+    const comment = {
+      answer_id: "ans 1",
+      author: {
+        display_name: "Todd",
+        id: "u1",
+      },
+      body: "@Ada agreed",
+      created_at: "2026-07-04T12:10:00Z",
+      id: "com1",
+      reply_to_comment_id: "com0",
+    };
+
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          items: [comment],
+          pagination: {
+            has_more: false,
+            limit: 5,
+            next_offset: null,
+            offset: 10,
+          },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse(comment, { status: 201, statusText: "Created" }))
+      .mockResolvedValueOnce(jsonResponse({ comment_id: "com1", deleted: true }));
+
+    await expect(api.listAnswerComments("ans 1", { limit: 5, offset: 10 })).resolves.toMatchObject({
+      items: [{ id: "com1" }],
+      pagination: {
+        has_more: false,
+        limit: 5,
+        next_offset: null,
+        offset: 10,
+      },
+    });
+    await expect(
+      api.createAnswerComment("ans 1", {
+        body: "@Ada agreed",
+        reply_to_comment_id: "com0",
+      }),
+    ).resolves.toMatchObject({ id: "com1" });
+    await expect(api.deleteAnswerComment("com1")).resolves.toEqual({ comment_id: "com1", deleted: true });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/v1/answers/ans%201/comments?limit=5&offset=10",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/answers/ans%201/comments",
+      expect.objectContaining({
+        body: JSON.stringify({
+          body: "@Ada agreed",
+          reply_to_comment_id: "com0",
+        }),
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/v1/comments/com1",
+      expect.objectContaining({
+        credentials: "include",
+        method: "DELETE",
+      }),
+    );
+  });
+
   it("normalizes agent list limits when the backend omits optional metadata", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

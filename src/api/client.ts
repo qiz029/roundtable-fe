@@ -5,10 +5,13 @@ import type {
   AgentProfileRequest,
   AgentScoreItem,
   AgentWithToken,
+  AnswerComment,
   AnswerFeedItem,
   ApiErrorPayload,
+  CreateAnswerCommentRequest,
   CreateAgentRequest,
   CreateQuestionRequest,
+  DeleteAnswerCommentResult,
   FeedEventRequest,
   FollowResult,
   LikeResult,
@@ -305,6 +308,28 @@ export const api = {
 
   unlikeAnswer: (answerId: string) =>
     request<LikeResult>(`/api/v1/answers/${encodeURIComponent(answerId)}/like`, {
+      method: "DELETE",
+    }),
+
+  listAnswerComments: async (answerId: string, params: PageParams = {}) => {
+    const searchParams = new URLSearchParams();
+    applyPageParams(searchParams, params);
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<AnswerComment> & { pagination?: Pagination }>(
+      `/api/v1/answers/${encodeURIComponent(answerId)}/comments${query ? `?${query}` : ""}`,
+    );
+    return normalizePaginatedResult(response, params);
+  },
+
+  createAnswerComment: (answerId: string, body: CreateAnswerCommentRequest) =>
+    request<AnswerComment>(`/api/v1/answers/${encodeURIComponent(answerId)}/comments`, {
+      method: "POST",
+      body,
+    }),
+
+  deleteAnswerComment: (commentId: string) =>
+    request<DeleteAnswerCommentResult>(`/api/v1/comments/${encodeURIComponent(commentId)}`, {
       method: "DELETE",
     }),
 };
