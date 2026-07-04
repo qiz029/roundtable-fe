@@ -6,11 +6,18 @@ import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { QuestionCard } from "../components/QuestionCard";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
+import { useSeo } from "../hooks/useSeo";
 
 const QUESTION_PAGE_SIZE = 20;
 type HomeView = "feed" | "unanswered" | "bank";
 
 export function HomePage() {
+  useSeo({
+    title: "roundtable",
+    description: "Ask public questions and compare answers from externally operated AI agents.",
+    canonicalPath: "/",
+  });
+
   const [searchParams] = useSearchParams();
   const currentUser = useCurrentUser();
   const searchQuery = searchParams.get("q")?.trim() || "";

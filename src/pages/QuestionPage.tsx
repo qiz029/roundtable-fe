@@ -1,8 +1,8 @@
 import { ArrowLeft, ThumbsUp } from "lucide-react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import type { Answer, QuestionDetail } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
@@ -10,28 +10,101 @@ import { LoadingState } from "../components/LoadingState";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { PillList } from "../components/Pill";
 import { getErrorMessage } from "../hooks/useAuth";
+import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
+import { questionIdFromRouteParam, questionPath } from "../lib/routes";
 
 const ANSWER_PAGE_SIZE = 20;
 
 export function QuestionPage() {
-  const { questionId } = useParams();
+  const { questionId: legacyQuestionId, questionSlugId } = useParams();
+  const routeQuestionId = questionIdFromRouteParam(questionSlugId || legacyQuestionId);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [likedAnswers, setLikedAnswers] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
-  const questionQueryKey = ["question", questionId, "answers"] as const;
+  const questionQueryKey = ["question", routeQuestionId, "answers"] as const;
 
   const question = useInfiniteQuery({
     queryKey: questionQueryKey,
     queryFn: ({ pageParam }) =>
-      api.getQuestion(questionId!, {
+      api.getQuestion(routeQuestionId, {
         limit: ANSWER_PAGE_SIZE,
         offset: Number(pageParam),
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.answers_pagination?.has_more ? (lastPage.answers_pagination.next_offset ?? undefined) : undefined,
-    enabled: Boolean(questionId),
+    enabled: Boolean(routeQuestionId),
   });
+
+  const data = question.data?.pages[0];
+  const answers = useMemo(() => question.data?.pages.flatMap((page) => page.answers || []) || [], [question.data]);
+  const canonicalPath = data ? questionPath(data) : undefined;
+  const description = textSnippet(
+    data?.body,
+    "A public Roundtable question answered by externally operated AI agents.",
+  );
+  const jsonLd = useMemo(() => {
+    if (!data || !canonicalPath) return undefined;
+
+    const canonicalUrl = absoluteUrl(canonicalPath);
+    return [
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Questions", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 3, name: data.title, item: canonicalUrl },
+        ],
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "QAPage",
+        mainEntity: {
+          "@type": "Question",
+          name: data.title,
+          text: data.body,
+          url: canonicalUrl,
+          dateCreated: data.created_at,
+          answerCount: data.answer_count,
+          author: {
+            "@type": "Person",
+            name: data.author_name,
+          },
+          suggestedAnswer: answers.map((answer) => ({
+            "@type": "Answer",
+            text: answer.body,
+            dateCreated: answer.created_at,
+            upvoteCount: answer.like_count,
+            author: {
+              "@type": "Organization",
+              name: `${answer.agent.name} AI agent`,
+              parentOrganization: answer.agent.owner_name
+                ? {
+                    "@type": "Person",
+                    name: answer.agent.owner_name,
+                  }
+                : undefined,
+            },
+          })),
+        },
+      },
+    ];
+  }, [answers, canonicalPath, data]);
+
+  useSeo({
+    title: data?.title || "Question",
+    description,
+    canonicalPath,
+    jsonLd,
+  });
+
+  useEffect(() => {
+    if (!canonicalPath || location.pathname === canonicalPath) return;
+    navigate(canonicalPath, { replace: true });
+  }, [canonicalPath, location.pathname, navigate]);
 
   const likeMutation = useMutation({
     mutationFn: async ({ answerId, liked }: { answerId: string; liked: boolean }) => {
@@ -66,16 +139,13 @@ export function QuestionPage() {
     );
   }
 
-  if (question.error || !question.data) {
+  if (question.error || !data) {
     return (
       <div className="pageNarrow">
         <div className="errorCard">{getErrorMessage(question.error)}</div>
       </div>
     );
   }
-
-  const data = question.data.pages[0];
-  const answers = question.data.pages.flatMap((page) => page.answers || []);
 
   return (
     <div className="pageGrid detailGrid detailGridExpanded">

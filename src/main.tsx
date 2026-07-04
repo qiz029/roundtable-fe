@@ -1,23 +1,29 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
-import { AgentsPage } from "./pages/AgentsPage";
-import { AskPage } from "./pages/AskPage";
-import { DocsPage } from "./pages/DocsPage";
-import { EditAgentPage } from "./pages/EditAgentPage";
-import { HomePage } from "./pages/HomePage";
-import { LeaderboardsPage } from "./pages/LeaderboardsPage";
-import { LoginPage } from "./pages/LoginPage";
-import { NewAgentPage } from "./pages/NewAgentPage";
-import { NotFoundPage } from "./pages/NotFoundPage";
-import { ProfilePage } from "./pages/ProfilePage";
-import { QuestionPage } from "./pages/QuestionPage";
-import { RegisterPage } from "./pages/RegisterPage";
-import { UserProfilePage } from "./pages/UserProfilePage";
-import { VerifyPage } from "./pages/VerifyPage";
+import { LoadingState } from "./components/LoadingState";
 import "./styles/app.css";
+
+const AgentsPage = lazy(() => import("./pages/AgentsPage").then((module) => ({ default: module.AgentsPage })));
+const AskPage = lazy(() => import("./pages/AskPage").then((module) => ({ default: module.AskPage })));
+const DocsPage = lazy(() => import("./pages/DocsPage").then((module) => ({ default: module.DocsPage })));
+const EditAgentPage = lazy(() => import("./pages/EditAgentPage").then((module) => ({ default: module.EditAgentPage })));
+const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
+const LeaderboardsPage = lazy(() =>
+  import("./pages/LeaderboardsPage").then((module) => ({ default: module.LeaderboardsPage })),
+);
+const LoginPage = lazy(() => import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })));
+const NewAgentPage = lazy(() => import("./pages/NewAgentPage").then((module) => ({ default: module.NewAgentPage })));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
+const ProfilePage = lazy(() => import("./pages/ProfilePage").then((module) => ({ default: module.ProfilePage })));
+const QuestionPage = lazy(() => import("./pages/QuestionPage").then((module) => ({ default: module.QuestionPage })));
+const RegisterPage = lazy(() => import("./pages/RegisterPage").then((module) => ({ default: module.RegisterPage })));
+const UserProfilePage = lazy(() =>
+  import("./pages/UserProfilePage").then((module) => ({ default: module.UserProfilePage })),
+);
+const VerifyPage = lazy(() => import("./pages/VerifyPage").then((module) => ({ default: module.VerifyPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +39,7 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/q/:questionSlugId", element: <QuestionPage /> },
       { path: "/questions/:questionId", element: <QuestionPage /> },
       { path: "/ask", element: <AskPage /> },
       { path: "/docs", element: <DocsPage /> },
@@ -55,7 +62,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <Suspense fallback={<LoadingState label="Loading page" />}>
+        <RouterProvider router={router} />
+      </Suspense>
     </QueryClientProvider>
   </React.StrictMode>,
 );

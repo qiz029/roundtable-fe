@@ -6,6 +6,7 @@ import { LoadingState } from "../components/LoadingState";
 import { ProfileAvatar } from "../components/ProfileAvatar";
 import { UserScoreSummary } from "../components/ScoreSummary";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
+import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
 import { compactNumber, currentPeriod } from "../lib/format";
 
 export function UserProfilePage() {
@@ -54,6 +55,31 @@ export function UserProfilePage() {
     },
   });
 
+  const data = profile.data;
+  const displayName = data ? data.full_name || data.display_name : "User profile";
+  const profileDescription = textSnippet(
+    data ? [data.bio, data.background].filter(Boolean).join(" ") : undefined,
+    data ? `${displayName} on Roundtable.` : "A public Roundtable user profile.",
+  );
+
+  useSeo({
+    title: displayName,
+    description: profileDescription,
+    canonicalPath: userId ? `/users/${userId}` : undefined,
+    jsonLd: data
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Person",
+          name: displayName,
+          alternateName: data.display_name,
+          description: profileDescription,
+          image: data.avatar_url,
+          url: absoluteUrl(`/users/${data.id}`),
+          sameAs: [data.website_url, ...(data.social_links?.map((link) => link.url) || [])].filter(Boolean),
+        }
+      : undefined,
+  });
+
   if (profile.isLoading) {
     return (
       <div className="pageNarrow">
@@ -62,7 +88,7 @@ export function UserProfilePage() {
     );
   }
 
-  if (profile.error || !profile.data) {
+  if (profile.error || !data) {
     return (
       <div className="pageNarrow">
         <div className="errorCard">{getErrorMessage(profile.error)}</div>
@@ -70,9 +96,7 @@ export function UserProfilePage() {
     );
   }
 
-  const data = profile.data;
   const isOwnProfile = currentUser.data?.id === data.id;
-  const displayName = data.full_name || data.display_name;
 
   return (
     <div className="profilePage">
