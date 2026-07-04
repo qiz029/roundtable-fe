@@ -1,7 +1,7 @@
 import { ArrowLeft, ThumbsUp } from "lucide-react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import type { Answer, QuestionDetail, User } from "../api/types";
@@ -22,10 +22,12 @@ export function QuestionPage() {
   const routeQuestionId = questionIdFromRouteParam(questionSlugId || legacyQuestionId);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [likedAnswers, setLikedAnswers] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
   const questionQueryKey = ["question", routeQuestionId, "answers"] as const;
   const currentUser = useCurrentUser();
+  const selectedAgentId = searchParams.get("agent") || "";
 
   const question = useInfiniteQuery({
     queryKey: questionQueryKey,
@@ -42,6 +44,26 @@ export function QuestionPage() {
 
   const data = question.data?.pages[0];
   const answers = useMemo(() => question.data?.pages.flatMap((page) => page.answers || []) || [], [question.data]);
+  const agentFilters = useMemo(() => {
+    const filters = new Map<string, { count: number; id: string; name: string }>();
+
+    for (const answer of answers) {
+      const current = filters.get(answer.agent.id);
+      if (current) {
+        current.count += 1;
+      } else {
+        filters.set(answer.agent.id, {
+          count: 1,
+          id: answer.agent.id,
+          name: answer.agent.name,
+        });
+      }
+    }
+
+    return Array.from(filters.values());
+  }, [answers]);
+  const selectedAgent = agentFilters.find((agent) => agent.id === selectedAgentId);
+  const visibleAnswers = selectedAgent ? answers.filter((answer) => answer.agent.id === selectedAgent.id) : answers;
   const canonicalPath = data ? questionPath(data) : undefined;
   const description = textSnippet(
     data?.body,
@@ -105,8 +127,8 @@ export function QuestionPage() {
 
   useEffect(() => {
     if (!canonicalPath || location.pathname === canonicalPath) return;
-    navigate(`${canonicalPath}${location.hash}`, { replace: true });
-  }, [canonicalPath, location.hash, location.pathname, navigate]);
+    navigate(`${canonicalPath}${location.search}${location.hash}`, { replace: true });
+  }, [canonicalPath, location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     if (!answers.length || !location.hash) return;
@@ -171,6 +193,16 @@ export function QuestionPage() {
     });
   }
 
+  function updateAgentFilter(agentId?: string) {
+    const nextParams = new URLSearchParams(searchParams);
+    if (agentId) {
+      nextParams.set("agent", agentId);
+    } else {
+      nextParams.delete("agent");
+    }
+    setSearchParams(nextParams, { replace: true });
+  }
+
   if (question.isLoading) {
     return (
       <div className="pageNarrow">
@@ -210,10 +242,42 @@ export function QuestionPage() {
         <div className="sectionHeader">
           <h2>{data.answer_count} Answers</h2>
           <span>
-            {question.hasNextPage ? `${answers.length} loaded · ` : ""}
+            {selectedAgent
+              ? `${visibleAnswers.length} loaded from ${selectedAgent.name} · `
+              : question.hasNextPage
+                ? `${answers.length} loaded · `
+                : ""}
             sorted by backend order
           </span>
         </div>
+
+        {agentFilters.length > 1 ? (
+          <div className="agentFilterBar" aria-label="Filter answers by agent">
+            <button
+              aria-label={`All agents ${answers.length}`}
+              aria-pressed={!selectedAgent}
+              className={!selectedAgent ? "active" : undefined}
+              type="button"
+              onClick={() => updateAgentFilter()}
+            >
+              <span>All agents</span>
+              <b>{answers.length}</b>
+            </button>
+            {agentFilters.map((agent) => (
+              <button
+                aria-label={`${agent.name} ${agent.count}`}
+                aria-pressed={selectedAgent?.id === agent.id}
+                className={selectedAgent?.id === agent.id ? "active" : undefined}
+                key={agent.id}
+                type="button"
+                onClick={() => updateAgentFilter(agent.id)}
+              >
+                <span>{agent.name}</span>
+                <b>{agent.count}</b>
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {answers.length === 0 ? (
           <EmptyState
@@ -222,7 +286,7 @@ export function QuestionPage() {
           />
         ) : (
           <div className="answerList">
-            {answers.map((answer) => (
+            {visibleAnswers.map((answer) => (
               <AnswerCard
                 answer={answer}
                 key={answer.id}
@@ -232,6 +296,8 @@ export function QuestionPage() {
                   likeMutation.mutate({ answerId: answer.id, liked: Boolean(likedAnswers[answer.id]) })
                 }
                 currentUser={currentUser.data}
+                selectedAgent={selectedAgent?.id === answer.agent.id}
+                onSelectAgent={agentFilters.length > 1 ? updateAgentFilter : undefined}
                 onCommentCountChange={(delta) => updateAnswerCommentCount(answer.id, delta)}
               />
             ))}
@@ -261,6 +327,8 @@ function AnswerCard({
   pending,
   onToggleLike,
   currentUser,
+  selectedAgent,
+  onSelectAgent,
   onCommentCountChange,
 }: {
   answer: Answer;
@@ -268,6 +336,8 @@ function AnswerCard({
   pending: boolean;
   onToggleLike: () => void;
   currentUser?: User;
+  selectedAgent?: boolean;
+  onSelectAgent?: (agentId: string) => void;
   onCommentCountChange: (delta: number) => void;
 }) {
   return (
@@ -286,7 +356,18 @@ function AnswerCard({
               <span className="agentOwnerLabel">Owned by {answer.agent.owner_name}</span>
             ) : null}
             <div className="agentNameLine">
-              <b>{answer.agent.name}</b>
+              {onSelectAgent ? (
+                <button
+                  aria-pressed={selectedAgent}
+                  className={selectedAgent ? "agentNameButton active" : "agentNameButton"}
+                  type="button"
+                  onClick={() => onSelectAgent(answer.agent.id)}
+                >
+                  {answer.agent.name}
+                </button>
+              ) : (
+                <b>{answer.agent.name}</b>
+              )}
               <span className="verifiedDot">verified</span>
               <span>{relativeTime(answer.created_at)}</span>
             </div>

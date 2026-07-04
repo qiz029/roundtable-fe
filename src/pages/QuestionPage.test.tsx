@@ -16,7 +16,7 @@ function jsonResponse(body: unknown, init: ResponseInit = {}) {
   });
 }
 
-function renderQuestionPage() {
+function renderQuestionPage(initialEntry = "/q/backend-release-workflow--q1") {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -25,19 +25,21 @@ function renderQuestionPage() {
     },
   });
   const router = createMemoryRouter([{ path: "/q/:questionSlugId", element: <QuestionPage /> }], {
-    initialEntries: ["/q/backend-release-workflow--q1"],
+    initialEntries: [initialEntry],
   });
 
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+
+  return { router, ...result };
 }
 
 function questionDetail() {
   return {
-    answer_count: 1,
+    answer_count: 3,
     answers: [
       {
         agent: {
@@ -50,6 +52,30 @@ function questionDetail() {
         created_at: "2026-07-04T12:05:00Z",
         id: "ans1",
         like_count: 7,
+      },
+      {
+        agent: {
+          id: "agt2",
+          name: "QualityBot",
+          owner_name: "QA Team",
+        },
+        body: "Use the canary dashboard to compare answer quality.",
+        comment_count: 0,
+        created_at: "2026-07-04T12:07:00Z",
+        id: "ans2",
+        like_count: 4,
+      },
+      {
+        agent: {
+          id: "agt1",
+          name: "ReleaseBot",
+          owner_name: "Ops Team",
+        },
+        body: "Check rollback metadata after the migration.",
+        comment_count: 0,
+        created_at: "2026-07-04T12:09:00Z",
+        id: "ans3",
+        like_count: 3,
       },
     ],
     answers_pagination: {
@@ -146,6 +172,51 @@ function commentPostBodies() {
     .filter(([url, init]) => String(url).includes("/api/v1/answers/ans1/comments") && init?.method === "POST")
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 }
+
+describe("QuestionPage agent filtering", () => {
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    mockQuestionApi();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("filters loaded answers by agent and stores the selection in the URL", async () => {
+    const user = userEvent.setup();
+    const { router } = renderQuestionPage();
+
+    expect(await screen.findByText("Run the migration preflight before deploy.")).toBeInTheDocument();
+    expect(screen.getByText("Use the canary dashboard to compare answer quality.")).toBeInTheDocument();
+    expect(screen.getByText("Check rollback metadata after the migration.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "QualityBot 1" }));
+
+    expect(screen.queryByText("Run the migration preflight before deploy.")).not.toBeInTheDocument();
+    expect(screen.getByText("Use the canary dashboard to compare answer quality.")).toBeInTheDocument();
+    expect(screen.queryByText("Check rollback metadata after the migration.")).not.toBeInTheDocument();
+    expect(router.state.location.search).toBe("?agent=agt2");
+
+    await user.click(screen.getByRole("button", { name: "All agents 3" }));
+
+    expect(screen.getByText("Run the migration preflight before deploy.")).toBeInTheDocument();
+    expect(screen.getByText("Use the canary dashboard to compare answer quality.")).toBeInTheDocument();
+    expect(screen.getByText("Check rollback metadata after the migration.")).toBeInTheDocument();
+    expect(router.state.location.search).toBe("");
+  });
+
+  it("uses the agent query parameter as the initial filter", async () => {
+    renderQuestionPage("/q/backend-release-workflow--q1?agent=agt1");
+
+    expect(await screen.findByText("Run the migration preflight before deploy.")).toBeInTheDocument();
+    expect(screen.queryByText("Use the canary dashboard to compare answer quality.")).not.toBeInTheDocument();
+    expect(screen.getByText("Check rollback metadata after the migration.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "ReleaseBot 2" })).toHaveAttribute("aria-pressed", "true");
+  });
+});
 
 describe("QuestionPage answer comments", () => {
   beforeEach(() => {

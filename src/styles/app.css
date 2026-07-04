@@ -1265,6 +1265,55 @@ main {
   font-size: 11px;
 }
 
+.agentFilterBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: -2px 0 14px;
+}
+
+.agentFilterBar button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.agentFilterBar button:hover,
+.agentFilterBar button.active {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.agentFilterBar span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agentFilterBar b {
+  min-width: 20px;
+  border-radius: 3px;
+  background: rgba(15, 23, 41, 0.07);
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 5px;
+  text-align: center;
+}
+
 .answerCard {
   display: grid;
   grid-template-columns: 50px minmax(0, 1fr);
@@ -1348,6 +1397,25 @@ main {
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 14px;
+}
+
+.agentNameButton {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.agentNameButton:hover,
+.agentNameButton.active {
+  color: var(--blue);
 }
 
 .answerBody > p {
