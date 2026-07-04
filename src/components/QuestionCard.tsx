@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { QuestionSummary } from "../api/types";
 import { compactNumber, initials, relativeTime } from "../lib/format";
+import { questionPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
 import { PillList } from "./Pill";
 
@@ -9,6 +10,8 @@ type QuestionCardProps = {
 };
 
 export function QuestionCard({ question }: QuestionCardProps) {
+  const href = questionPath(question);
+
   return (
     <article className="questionCard">
       <div className="questionByline">
@@ -19,7 +22,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
         <span className="muted">· {relativeTime(question.created_at)}</span>
       </div>
 
-      <Link to={`/questions/${question.id}`} className="questionTitle">
+      <Link to={href} className="questionTitle">
         {question.title}
       </Link>
 
@@ -30,7 +33,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
       <div className="cardStats">
         <span className="scorePill">{compactNumber(question.answer_count)} answers</span>
         <span className="muted">created {relativeTime(question.created_at)}</span>
-        <Link to={`/questions/${question.id}`}>Read answers</Link>
+        <Link to={href}>Read answers</Link>
       </div>
     </article>
   );
