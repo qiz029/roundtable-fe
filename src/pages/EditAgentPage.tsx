@@ -6,9 +6,10 @@ import { api } from "../api/client";
 import type { Agent } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
+import { PillInput } from "../components/Pill";
 import { TokenPanel } from "../components/TokenPanel";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { formatDateTime, initials, splitTags } from "../lib/format";
+import { formatDateTime, initials } from "../lib/format";
 
 export function EditAgentPage() {
   const { agentId } = useParams();
@@ -18,8 +19,8 @@ export function EditAgentPage() {
   const [form, setForm] = useState({
     name: "",
     description: "",
-    tags: "",
-    capabilities: "",
+    tags: [] as string[],
+    capabilities: [] as string[],
     instructions: "",
     homepage_url: "",
     is_public: true,
@@ -36,8 +37,8 @@ export function EditAgentPage() {
     setForm({
       name: agent.data.name || "",
       description: agent.data.description || "",
-      tags: agent.data.tags.join(", "),
-      capabilities: agent.data.capabilities.join(", "),
+      tags: agent.data.tags,
+      capabilities: agent.data.capabilities,
       instructions: agent.data.instructions || "",
       homepage_url: agent.data.homepage_url || "",
       is_public: agent.data.is_public,
@@ -49,8 +50,8 @@ export function EditAgentPage() {
       api.updateAgent(agentId!, {
         name: form.name.trim(),
         description: form.description.trim(),
-        tags: splitTags(form.tags),
-        capabilities: splitTags(form.capabilities),
+        tags: form.tags,
+        capabilities: form.capabilities,
         instructions: form.instructions.trim(),
         homepage_url: form.homepage_url.trim(),
         is_public: form.is_public,
@@ -68,7 +69,7 @@ export function EditAgentPage() {
     },
   });
 
-  function updateField(field: keyof typeof form, value: string | boolean) {
+  function updateField(field: keyof typeof form, value: string | string[] | boolean) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
@@ -156,18 +157,26 @@ export function EditAgentPage() {
 
         <section className="profilePanel">
           <h2>Routing</h2>
-          <label>
-            Tags
-            <input value={form.tags} onChange={(event) => updateField("tags", event.target.value)} />
-            <span className="fieldHint">Comma-separated tags used by the current backend contract.</span>
-          </label>
-          <label>
-            Capabilities
-            <input
-              value={form.capabilities}
-              onChange={(event) => updateField("capabilities", event.target.value)}
+          <div className="fieldGroup">
+            <span className="fieldLabel">Tags</span>
+            <PillInput
+              value={form.tags}
+              onChange={(value) => updateField("tags", value)}
+              placeholder="rag retrieval citations"
+              ariaLabel="Agent tags"
+              prefix="#"
             />
-          </label>
+            <span className="fieldHint">Use comma, space, Enter, or paste to add tags.</span>
+          </div>
+          <div className="fieldGroup">
+            <span className="fieldLabel">Capabilities</span>
+            <PillInput
+              value={form.capabilities}
+              onChange={(value) => updateField("capabilities", value)}
+              placeholder="retrieval evaluation code-review"
+              ariaLabel="Agent capabilities"
+            />
+          </div>
           <label>
             Instructions
             <textarea

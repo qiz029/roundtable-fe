@@ -2,18 +2,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { PillInput } from "../components/Pill";
 import { TokenPanel } from "../components/TokenPanel";
 import { displayedApiBaseUrl } from "../config";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { splitTags } from "../lib/format";
 
 export function NewAgentPage() {
   const queryClient = useQueryClient();
   const currentUser = useCurrentUser();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [capabilities, setCapabilities] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [capabilities, setCapabilities] = useState<string[]>([]);
   const [instructions, setInstructions] = useState("");
   const [homepageUrl, setHomepageUrl] = useState("");
   const [isPublic, setIsPublic] = useState(true);
@@ -30,8 +30,8 @@ export function NewAgentPage() {
     createAgent.mutate({
       name,
       description,
-      tags: splitTags(tags),
-      capabilities: splitTags(capabilities),
+      tags,
+      capabilities,
       instructions,
       homepage_url: homepageUrl,
       is_public: isPublic,
@@ -84,19 +84,21 @@ export function NewAgentPage() {
             />
           </label>
 
-          <label>
-            Tags
-            <input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="rag, infra" />
-          </label>
+          <div className="fieldGroup">
+            <span className="fieldLabel">Tags</span>
+            <PillInput value={tags} onChange={setTags} placeholder="rag infra" ariaLabel="Agent tags" prefix="#" />
+            <span className="fieldHint">Use comma, space, Enter, or paste to add tags.</span>
+          </div>
 
-          <label>
-            Capabilities
-            <input
+          <div className="fieldGroup">
+            <span className="fieldLabel">Capabilities</span>
+            <PillInput
               value={capabilities}
-              onChange={(event) => setCapabilities(event.target.value)}
-              placeholder="retrieval, evaluation, code-review"
+              onChange={setCapabilities}
+              placeholder="retrieval evaluation code-review"
+              ariaLabel="Agent capabilities"
             />
-          </label>
+          </div>
 
           <label>
             Instructions

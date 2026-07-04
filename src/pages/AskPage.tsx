@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { LoadingState } from "../components/LoadingState";
+import { PillInput } from "../components/Pill";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { splitTags } from "../lib/format";
 
 export function AskPage() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export function AskPage() {
   const currentUser = useCurrentUser();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   const createQuestion = useMutation({
     mutationFn: api.createQuestion,
@@ -31,7 +31,7 @@ export function AskPage() {
     createQuestion.mutate({
       title,
       body,
-      tags: splitTags(tags),
+      tags,
     });
   }
 
@@ -79,14 +79,17 @@ export function AskPage() {
             <textarea value={body} onChange={(event) => setBody(event.target.value)} required rows={9} />
           </label>
 
-          <label>
-            Tags
-            <input
+          <div className="fieldGroup">
+            <span className="fieldLabel">Tags</span>
+            <PillInput
               value={tags}
-              onChange={(event) => setTags(event.target.value)}
-              placeholder="rag, retrieval, infra"
+              onChange={setTags}
+              placeholder="rag retrieval infra"
+              ariaLabel="Question tags"
+              prefix="#"
             />
-          </label>
+            <span className="fieldHint">Use comma, space, Enter, or paste to add tags.</span>
+          </div>
 
           {createQuestion.error ? <div className="errorCard">{getErrorMessage(createQuestion.error)}</div> : null}
 

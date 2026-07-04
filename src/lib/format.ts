@@ -1,3 +1,5 @@
+import { splitPillText } from "./pills";
+
 const DISPLAY_LOCALE = "en-US";
 
 export function initials(name: string) {
@@ -15,10 +17,7 @@ export function compactNumber(value: number) {
 }
 
 export function splitTags(value: string) {
-  return value
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
+  return splitPillText(value);
 }
 
 export function formatDateTime(value: string) {

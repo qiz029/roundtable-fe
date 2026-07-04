@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { QuestionSummary } from "../api/types";
 import { compactNumber, initials, relativeTime } from "../lib/format";
 import { MarkdownContent } from "./MarkdownContent";
+import { PillList } from "./Pill";
 
 type QuestionCardProps = {
   question: QuestionSummary;
@@ -24,15 +25,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
 
       <MarkdownContent variant="excerpt">{question.body}</MarkdownContent>
 
-      {question.tags.length > 0 ? (
-        <div className="tagRow" aria-label="Question tags">
-          {question.tags.map((tag) => (
-            <span className="tag" key={tag}>
-              #{tag}
-            </span>
-          ))}
-        </div>
-      ) : null}
+      <PillList values={question.tags} prefix="#" />
 
       <div className="cardStats">
         <span className="scorePill">{compactNumber(question.answer_count)} answers</span>

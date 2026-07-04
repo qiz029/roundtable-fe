@@ -632,18 +632,18 @@ main {
 }
 
 .tagRow,
-.capabilityList {
+.capabilityList,
+.pillRow {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
 }
 
-.questionCard .tagRow {
+.questionCard .tagRow,
+.questionCard .pillRow {
   margin-top: 13px;
 }
 
-.tag,
-.capabilityList span,
 .verifiedDot {
   border-radius: 3px;
   background: var(--blue-soft);
@@ -654,9 +654,108 @@ main {
   padding: 3px 7px;
 }
 
-.capabilityList span {
-  background: var(--surface-3);
-  color: var(--muted);
+.pill {
+  --pill-bg: var(--blue-soft);
+  --pill-border: #dbe6fd;
+  --pill-text: var(--blue);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  border: 1px solid var(--pill-border);
+  border-radius: 3px;
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  padding: 4px 7px;
+}
+
+.pill span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill button {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.pill button:hover {
+  background: rgba(15, 23, 41, 0.08);
+}
+
+.pillTone0 {
+  --pill-bg: #eef4ff;
+  --pill-border: #c9d9fb;
+  --pill-text: #1a56db;
+}
+
+.pillTone1 {
+  --pill-bg: #eaf7f0;
+  --pill-border: #bee6d1;
+  --pill-text: #18845b;
+}
+
+.pillTone2 {
+  --pill-bg: #fdf6e3;
+  --pill-border: #f3dda2;
+  --pill-text: #9b6f00;
+}
+
+.pillTone3 {
+  --pill-bg: #f3ecff;
+  --pill-border: #d8c4fb;
+  --pill-text: #6f3cc3;
+}
+
+.pillTone4 {
+  --pill-bg: #eaf8fb;
+  --pill-border: #bce4ec;
+  --pill-text: #087183;
+}
+
+.pillTone5 {
+  --pill-bg: #fff0f3;
+  --pill-border: #f5c8d1;
+  --pill-text: #b33553;
+}
+
+.pillTone6 {
+  --pill-bg: #eef2f7;
+  --pill-border: #d4dbe7;
+  --pill-text: #46546a;
+}
+
+.pillTone7 {
+  --pill-bg: #f1f8e8;
+  --pill-border: #cde8a4;
+  --pill-text: #537d12;
+}
+
+.pillTone8 {
+  --pill-bg: #fff3e7;
+  --pill-border: #ffd3a3;
+  --pill-text: #ad5f00;
+}
+
+.pillTone9 {
+  --pill-bg: #edf1ff;
+  --pill-border: #c9d2ff;
+  --pill-text: #4051c8;
 }
 
 .cardStats {
@@ -1447,6 +1546,61 @@ main {
   height: 20px;
   padding: 0;
   accent-color: var(--blue);
+  box-shadow: none;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fieldLabel {
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.pillInput {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 6px 8px;
+}
+
+.pillInput:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.11);
+}
+
+.formCard .pillInput input,
+.profilePanel .pillInput input,
+.agentManageGrid .pillInput input,
+.profileForm .pillInput input {
+  width: auto;
+  min-width: 150px;
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 4px 2px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  box-shadow: none;
+}
+
+.formCard .pillInput input:focus,
+.profilePanel .pillInput input:focus,
+.agentManageGrid .pillInput input:focus,
+.profileForm .pillInput input:focus {
+  border-color: transparent;
   box-shadow: none;
 }
 

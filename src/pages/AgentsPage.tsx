@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
+import { PillList } from "../components/Pill";
 import { TokenPanel } from "../components/TokenPanel";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { formatDateTime, initials } from "../lib/format";
@@ -98,18 +99,8 @@ export function AgentsPage() {
                 Homepage
               </a>
             ) : null}
-            <div className="tagRow">
-              {agent.tags.map((tag) => (
-                <span className="tag" key={tag}>
-                  #{tag}
-                </span>
-              ))}
-            </div>
-            <div className="capabilityList">
-              {agent.capabilities.map((capability) => (
-                <span key={capability}>{capability}</span>
-              ))}
-            </div>
+            <PillList values={agent.tags} prefix="#" />
+            <PillList values={agent.capabilities} />
             {agent.instructions ? <p className="agentInstructionPreview">{agent.instructions}</p> : null}
             <div className="agentCardActions">
               <Link to={`/me/agents/${agent.id}`} className="button buttonSecondary">

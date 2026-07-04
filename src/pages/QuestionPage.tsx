@@ -7,6 +7,7 @@ import type { Answer, QuestionDetail } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { MarkdownContent } from "../components/MarkdownContent";
+import { PillList } from "../components/Pill";
 import { getErrorMessage } from "../hooks/useAuth";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
 
@@ -70,13 +71,7 @@ export function QuestionPage() {
         </Link>
 
         <article className="detailQuestion">
-          <div className="tagRow">
-            {data.tags.map((tag) => (
-              <span className="tag" key={tag}>
-                #{tag}
-              </span>
-            ))}
-          </div>
+          <PillList values={data.tags} prefix="#" />
           <h1>{data.title}</h1>
           <MarkdownContent>{data.body}</MarkdownContent>
           <div className="questionMeta">
