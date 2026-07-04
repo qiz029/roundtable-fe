@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="roundtable">
+  <defs>
+    <linearGradient id="rt-blue" x1="26" y1="18" x2="104" y2="111" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0056ff" />
+      <stop offset="0.46" stop-color="#0b6df6" />
+      <stop offset="1" stop-color="#9fc8ff" />
+    </linearGradient>
+    <linearGradient id="rt-top" x1="42" y1="16" x2="87" y2="47" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0072ff" />
+      <stop offset="1" stop-color="#004bd8" />
+    </linearGradient>
+    <linearGradient id="rt-soft" x1="31" y1="42" x2="89" y2="109" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#438dff" />
+      <stop offset="1" stop-color="#9fc8ff" />
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-width="17">
+    <path d="M42 35a44 44 0 0 1 44 0" stroke="url(#rt-top)" />
+    <path d="M100 51a44 44 0 0 1 0 26" stroke="url(#rt-blue)" opacity=".86" />
+    <path d="M86 97a44 44 0 0 1-44 0" stroke="url(#rt-soft)" />
+    <path d="M28 77a44 44 0 0 1 0-26" stroke="url(#rt-blue)" opacity=".72" />
+  </g>
+  <g stroke="#fff" stroke-width="5">
+    <circle cx="64" cy="22" r="9.5" fill="#005fff" />
+    <circle cx="106" cy="64" r="9.5" fill="#2f83ff" />
+    <circle cx="64" cy="106" r="9.5" fill="#8ebcff" />
+    <circle cx="22" cy="64" r="9.5" fill="#6aa7ff" />
+  </g>
+</svg>

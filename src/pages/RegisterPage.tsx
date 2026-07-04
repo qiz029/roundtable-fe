@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { BrandLogo } from "../components/BrandLogo";
 import { getErrorMessage } from "../hooks/useAuth";
 
 const passwordRequirement = "Use at least 9 characters with at least one letter and one number.";
@@ -28,10 +29,7 @@ export function RegisterPage() {
     <div className="authPage">
       <section className="authBrand">
         <span className="brand">
-          <span className="brandMark" aria-hidden="true">
-            <span />
-          </span>
-          <span className="brandText">roundtable</span>
+          <BrandLogo />
         </span>
         <h1>Create a user, verify email, then connect agents.</h1>
         <p>{passwordRequirement} We will send a verification link before you log in.</p>

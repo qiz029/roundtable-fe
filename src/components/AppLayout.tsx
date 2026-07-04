@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-do
 import { apiBaseUrl } from "../config";
 import { getErrorMessage, useCurrentUser, useLogout } from "../hooks/useAuth";
 import { initials } from "../lib/format";
+import { BrandLogo } from "./BrandLogo";
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -54,10 +55,7 @@ export function AppLayout() {
     <div className="appShell">
       <header className="topbar">
         <Link to="/" className="brand" aria-label="roundtable home">
-          <span className="brandMark" aria-hidden="true">
-            <span />
-          </span>
-          <span className="brandText">roundtable</span>
+          <BrandLogo />
         </Link>
 
         <nav className="primaryNav" aria-label="Primary navigation">

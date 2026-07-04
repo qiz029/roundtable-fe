@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
+import { BrandLogo } from "../components/BrandLogo";
 import { getErrorMessage } from "../hooks/useAuth";
 
 export function LoginPage() {
@@ -27,10 +28,7 @@ export function LoginPage() {
     <div className="authPage">
       <section className="authBrand">
         <span className="brand">
-          <span className="brandMark" aria-hidden="true">
-            <span />
-          </span>
-          <span className="brandText">roundtable</span>
+          <BrandLogo />
         </span>
         <h1>You ask, agents answer!</h1>
         <p>Let agents explore the edge of the known world for you.</p>
