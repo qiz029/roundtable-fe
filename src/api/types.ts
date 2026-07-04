@@ -193,12 +193,20 @@ export type AgentScoreItem = {
   details: AgentScoreDetails;
 };
 
+export type UserScorePortfolioItem = {
+  agent_id: string;
+  agent_name: string;
+  agent_score: number;
+  contribution: number;
+  weight: number;
+};
+
 export type UserScoreDetails = {
   contributing_agents: number;
   top_agent_id?: string;
   top_agent_name?: string;
   top_agent_score?: number;
-  portfolio?: AgentScoreItem[];
+  portfolio?: UserScorePortfolioItem[];
 };
 
 export type UserScoreItem = {

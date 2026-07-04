@@ -17,6 +17,10 @@ function hasPenalty(value: number) {
   return value !== 0;
 }
 
+function scoreKey(prefix: string, id: string | undefined, rank: number) {
+  return id ? `${prefix}-${id}` : `${prefix}-rank-${rank}`;
+}
+
 function RankCell({ rank }: { rank: number }) {
   if (rank > 0 && rank <= 3) {
     const medalClass = rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze";
@@ -107,8 +111,8 @@ export function UserScoreSummary({ score }: { score: UserScoreItem }) {
       {score.details.portfolio?.length ? (
         <div className="portfolioScoreList">
           {score.details.portfolio.map((agentScore, index) => (
-            <span key={agentScore.agent.id}>
-              <b>{agentScore.agent.name}</b>
+            <span key={scoreKey("portfolio", agentScore.agent_id, index)}>
+              <b>{agentScore.agent_name}</b>
               <small>
                 {index === 0
                   ? "best agent"
@@ -117,8 +121,10 @@ export function UserScoreSummary({ score }: { score: UserScoreItem }) {
                     : index === 2
                       ? "third agent"
                       : "later agent"}
+                {" · "}
+                {formatScore(agentScore.weight)}x weight
               </small>
-              <strong>{formatScore(agentScore.total_score)}</strong>
+              <strong>{formatScore(agentScore.contribution)}</strong>
             </span>
           ))}
         </div>
@@ -144,19 +150,23 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
         </thead>
         <tbody>
           {scores.map((score) => (
-            <tr key={score.agent.id}>
+            <tr key={scoreKey("agent", score.agent?.id, score.rank)}>
               <td className="rankCell">
                 <RankCell rank={score.rank} />
               </td>
               <td>
                 <div className="scoreIdentity">
-                  <span className="scoreAvatar">{initials(score.agent.name)}</span>
+                  <span className="scoreAvatar">{initials(score.agent?.name || "Agent")}</span>
                   <span>
-                    <b>{score.agent.name}</b>
+                    <b>{score.agent?.name || "Unknown agent"}</b>
                     <small>
-                      <Link to={`/users/${score.agent.owner.id}`}>@{score.agent.owner.display_name}</Link>
+                      {score.agent?.owner?.id ? (
+                        <Link to={`/users/${score.agent.owner.id}`}>@{score.agent.owner.display_name}</Link>
+                      ) : (
+                        <span>@unknown owner</span>
+                      )}
                       {" · "}
-                      {score.details.answer_count} answers
+                      {score.details?.answer_count || 0} answers
                     </small>
                   </span>
                 </div>
@@ -194,23 +204,27 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
         </thead>
         <tbody>
           {scores.map((score) => (
-            <tr key={score.user.id}>
+            <tr key={scoreKey("user", score.user?.id, score.rank)}>
               <td className="rankCell">
                 <RankCell rank={score.rank} />
               </td>
               <td>
                 <div className="scoreIdentity">
-                  <span className="scoreAvatar">{initials(score.user.display_name)}</span>
+                  <span className="scoreAvatar">{initials(score.user?.display_name || "User")}</span>
                   <span>
                     <b>
-                      <Link to={`/users/${score.user.id}`}>{score.user.display_name}</Link>
+                      {score.user?.id ? (
+                        <Link to={`/users/${score.user.id}`}>{score.user.display_name}</Link>
+                      ) : (
+                        "Unknown user"
+                      )}
                     </b>
                     <small>portfolio score</small>
                   </span>
                 </div>
               </td>
-              <td>{score.details.contributing_agents}</td>
-              <td>{score.details.top_agent_name || "None"}</td>
+              <td>{score.details?.contributing_agents || 0}</td>
+              <td>{score.details?.top_agent_name || "None"}</td>
               <td>{formatScore(score.owned_agent_score)}</td>
               <td>{formatScore(score.operator_bonus)}</td>
               <td className={hasPenalty(score.penalty_score) ? "penaltyCell" : undefined}>
