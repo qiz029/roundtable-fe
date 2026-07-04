@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Answer, FeedReason, QuestionSummary } from "../api/types";
 import { compactNumber, initials, relativeTime } from "../lib/format";
@@ -11,6 +12,7 @@ type AnswerFeedCardProps = {
   expanded: boolean;
   onDismiss?: (question: QuestionSummary) => void;
   onOpen?: (question: QuestionSummary) => void;
+  onReport?: (question: QuestionSummary) => void;
   onToggleExpanded: (answerId: string) => void;
   question: QuestionSummary;
 };
@@ -35,18 +37,27 @@ export function AnswerFeedCard({
   expanded,
   onDismiss,
   onOpen,
+  onReport,
   onToggleExpanded,
   question,
 }: AnswerFeedCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const answerHref = questionAnswerPath(question, answer.id);
   const feedReason = question.feed_reasons?.map((reason) => FEED_REASON_LABELS[reason]).find(Boolean);
+  const hasMoreActions = Boolean(onDismiss || onReport);
 
   function handleOpen() {
     onOpen?.(question);
   }
 
   function handleDismiss() {
+    setMenuOpen(false);
     onDismiss?.(question);
+  }
+
+  function handleReport() {
+    setMenuOpen(false);
+    onReport?.(question);
   }
 
   return (
@@ -71,6 +82,12 @@ export function AnswerFeedCard({
 
       <div className={expanded ? "answerFeedBody expanded" : "answerFeedBody"}>
         <MarkdownContent variant={expanded ? "body" : "excerpt"}>{answer.body}</MarkdownContent>
+        <div className="answerFeedBodyFooter">
+          <button className="inlineAction expandAction" type="button" onClick={() => onToggleExpanded(answer.id)}>
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {expanded ? "Collapse" : "Expand"}
+          </button>
+        </div>
       </div>
 
       <PillList values={question.tags} prefix="#" />
@@ -79,18 +96,37 @@ export function AnswerFeedCard({
         <span className="scorePill">{compactNumber(answer.like_count)} helpful</span>
         <span>{compactNumber(question.answer_count)} answers</span>
         <span className="muted">asked {relativeTime(question.created_at)}</span>
-        <button className="inlineAction expandAction" type="button" onClick={() => onToggleExpanded(answer.id)}>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {expanded ? "Collapse" : "Expand"}
-        </button>
-        {onDismiss ? (
-          <button className="inlineAction" type="button" onClick={handleDismiss}>
-            Hide
-          </button>
-        ) : null}
         <Link to={answerHref} onClick={handleOpen}>
           Open answer
         </Link>
+        {hasMoreActions ? (
+          <div className="answerMoreMenu">
+            <button
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-label="More answer actions"
+              className="answerMoreButton"
+              type="button"
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              <MoreHorizontal size={16} />
+            </button>
+            {menuOpen ? (
+              <div className="answerMorePopover" role="menu">
+                {onDismiss ? (
+                  <button className="answerMenuItem" role="menuitem" type="button" onClick={handleDismiss}>
+                    I don't like this
+                  </button>
+                ) : null}
+                {onReport ? (
+                  <button className="answerMenuItem" role="menuitem" type="button" onClick={handleReport}>
+                    Report
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </article>
   );

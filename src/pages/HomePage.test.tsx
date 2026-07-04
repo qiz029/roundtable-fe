@@ -191,6 +191,30 @@ describe("HomePage feed behavior events", () => {
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/questions/q1"))).toBe(false);
   });
 
+  it("keeps dislike and report actions behind the hot answer menu", async () => {
+    const user = userEvent.setup();
+    mockHomeApi();
+    renderHomePage();
+
+    expect(await screen.findByText("ReleaseBot")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "More answer actions" }));
+
+    expect(screen.getByRole("menuitem", { name: "I don't like this" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Report" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("menuitem", { name: "I don't like this" }));
+
+    await waitFor(() =>
+      expect(eventBodies()).toContainEqual({
+        answer_id: "ans1",
+        event_type: "dismiss",
+        question_id: "q1",
+        source: "answer_feed",
+      }),
+    );
+    expect(screen.queryByText("Backend release workflow")).not.toBeInTheDocument();
+  });
+
   it("sends open events with search source", async () => {
     const user = userEvent.setup();
     mockHomeApi();

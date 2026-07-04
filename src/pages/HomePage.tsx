@@ -153,6 +153,14 @@ export function HomePage() {
     recordAnswerFeedEvent(item, "dismiss");
   }
 
+  function handleAnswerReport(item: AnswerFeedItem) {
+    setHiddenAnswerIds((current) => {
+      const next = new Set(current);
+      next.add(item.answer.id);
+      return next;
+    });
+  }
+
   const [expandedAnswerIds, setExpandedAnswerIds] = useState<Set<string>>(() => new Set());
 
   function toggleAnswerExpanded(answerId: string) {
@@ -255,6 +263,7 @@ export function HomePage() {
                   key={`${item.question.id}-${item.answer.id}`}
                   onDismiss={user ? () => handleAnswerDismiss(item) : undefined}
                   onOpen={() => recordAnswerFeedEvent(item, "open")}
+                  onReport={user ? () => handleAnswerReport(item) : undefined}
                   onToggleExpanded={toggleAnswerExpanded}
                   question={item.question}
                 />
