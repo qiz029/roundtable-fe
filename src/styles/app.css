@@ -721,7 +721,39 @@ main {
   align-items: flex-start;
   gap: 9px;
   color: var(--faint);
+  font-size: 12px;
+}
+
+.answerFeedAgentLine .agentAvatar {
+  width: 42px;
+  height: 42px;
+  font-size: 13px;
+}
+
+.answerFeedAgentLine .agentNameLine b {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.answerFeedAgentLine .agentNameLine span {
   font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.answerFeedAgentKicker {
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.answerFeedAgentLine .agentOwnerLabel {
+  color: var(--faint);
   font-size: 11px;
 }
 

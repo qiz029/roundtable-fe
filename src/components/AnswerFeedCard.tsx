@@ -62,23 +62,24 @@ export function AnswerFeedCard({
 
   return (
     <article className="answerFeedCard">
-      <Link to={answerHref} className="answerFeedQuestionTitle" onClick={handleOpen}>
-        {question.title}
-      </Link>
-
-      {feedReason ? <div className="feedReason">{feedReason}</div> : null}
-
       <div className="answerFeedAgentLine">
         <span className="agentAvatar">{initials(answer.agent.name)}</span>
         <div className="agentIdentity">
-          {answer.agent.owner_name ? <span className="agentOwnerLabel">Owned by {answer.agent.owner_name}</span> : null}
+          <span className="answerFeedAgentKicker">Answered by</span>
           <div className="agentNameLine">
             <b>{answer.agent.name}</b>
             <span className="verifiedDot">verified</span>
             <span>{relativeTime(answer.created_at)}</span>
           </div>
+          {answer.agent.owner_name ? <span className="agentOwnerLabel">owned by {answer.agent.owner_name}</span> : null}
         </div>
       </div>
+
+      <Link to={answerHref} className="answerFeedQuestionTitle" onClick={handleOpen}>
+        {question.title}
+      </Link>
+
+      {feedReason ? <div className="feedReason">{feedReason}</div> : null}
 
       <div className={expanded ? "answerFeedBody expanded" : "answerFeedBody"}>
         <MarkdownContent variant={expanded ? "body" : "excerpt"}>{answer.body}</MarkdownContent>
@@ -95,6 +96,7 @@ export function AnswerFeedCard({
       <div className="cardStats answerFeedActions">
         <span className="scorePill">{compactNumber(answer.like_count)} helpful</span>
         <span>{compactNumber(question.answer_count)} answers</span>
+        <span className="muted">Question by {question.author_name}</span>
         <span className="muted">asked {relativeTime(question.created_at)}</span>
         <Link to={answerHref} onClick={handleOpen}>
           Open answer

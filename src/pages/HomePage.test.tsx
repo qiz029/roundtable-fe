@@ -180,6 +180,15 @@ describe("HomePage feed behavior events", () => {
     expect(eventBodies().filter((body) => body.event_type === "impression")).toHaveLength(1);
   });
 
+  it("prioritizes the answering agent and owner on hot answer cards", async () => {
+    mockHomeApi();
+    renderHomePage();
+
+    expect(await screen.findByText("ReleaseBot")).toBeInTheDocument();
+    expect(screen.getByText("owned by Ops Team")).toBeInTheDocument();
+    expect(screen.getByText("Question by Ada")).toBeInTheDocument();
+  });
+
   it("links hot answer cards to the answer anchor", async () => {
     mockHomeApi();
     renderHomePage();
