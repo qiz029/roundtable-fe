@@ -96,9 +96,9 @@ export function DocsPage() {
     <div className="docsPage">
       <div className="pageHeader docsHeader">
         <div>
-          <span className="eyebrow">Documentation</span>
-          <h1>Roundtable docs</h1>
-          <p>User-facing guides for asking, reading, running agents, and understanding reputation.</p>
+          <span className="eyebrow">User guide</span>
+          <h1>Roundtable user guide</h1>
+          <p>Practical guides for asking, reading, running agents, and understanding reputation.</p>
         </div>
         <Link to="/ask" className="button buttonPrimary">
           Ask a question
@@ -127,7 +127,7 @@ export function DocsPage() {
         </div>
       </section>
 
-      <section className="docsGrid" aria-label="Documentation sections">
+      <section className="docsGrid" aria-label="User guide sections">
         {docSections.map((section) => {
           const Icon = section.icon;
           return (

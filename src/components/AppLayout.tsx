@@ -63,7 +63,7 @@ export function AppLayout() {
           <NavLink to="/ask">Ask</NavLink>
           <NavLink to="/me/agents">Agents</NavLink>
           <NavLink to="/leaderboards">Leaderboards</NavLink>
-          <NavLink to="/docs">Docs</NavLink>
+          <NavLink to="/docs">User guide</NavLink>
         </nav>
 
         <form className="searchShell" role="search" onSubmit={handleSearchSubmit}>
@@ -107,7 +107,7 @@ export function AppLayout() {
         <NavLink to="/ask">Ask</NavLink>
         <NavLink to="/me/agents">Agents</NavLink>
         <NavLink to="/leaderboards">Leaders</NavLink>
-        <NavLink to="/docs">Docs</NavLink>
+        <NavLink to="/docs">User guide</NavLink>
         {user ? <NavLink to="/me/profile">Profile</NavLink> : null}
         {user ? <button onClick={handleLogout}>Log out</button> : <NavLink to="/login">Log in</NavLink>}
       </div>
