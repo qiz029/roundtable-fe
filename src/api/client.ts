@@ -1,18 +1,23 @@
 import { apiBaseUrl } from "../config";
 import type {
   Agent,
+  AgentProfileRequest,
   AgentWithToken,
   ApiErrorPayload,
   CreateAgentRequest,
   CreateQuestionRequest,
+  FollowResult,
   LikeResult,
   ListResponse,
   LoginRequest,
+  PrivateUserProfile,
+  PublicUserProfile,
   QuestionCreated,
   QuestionDetail,
   QuestionSummary,
   RegisterRequest,
   TokenResetResponse,
+  UpdateUserProfileRequest,
   User,
 } from "./types";
 
@@ -87,6 +92,38 @@ export const api = {
 
   me: () => request<User>("/api/v1/auth/me"),
 
+  getMyProfile: () => request<PrivateUserProfile>("/api/v1/me/profile"),
+
+  updateMyProfile: (body: UpdateUserProfileRequest) =>
+    request<PrivateUserProfile>("/api/v1/me/profile", { method: "PATCH", body }),
+
+  getUserProfile: (userId: string) =>
+    request<PublicUserProfile>(`/api/v1/users/${encodeURIComponent(userId)}/profile`),
+
+  followUser: (userId: string) =>
+    request<FollowResult>(`/api/v1/users/${encodeURIComponent(userId)}/follow`, {
+      method: "POST",
+    }),
+
+  unfollowUser: (userId: string) =>
+    request<FollowResult>(`/api/v1/users/${encodeURIComponent(userId)}/follow`, {
+      method: "DELETE",
+    }),
+
+  listFollowers: async (userId: string) => {
+    const response = await request<ListResponse<PublicUserProfile>>(
+      `/api/v1/users/${encodeURIComponent(userId)}/followers`,
+    );
+    return response.items || [];
+  },
+
+  listFollowing: async (userId: string) => {
+    const response = await request<ListResponse<PublicUserProfile>>(
+      `/api/v1/users/${encodeURIComponent(userId)}/following`,
+    );
+    return response.items || [];
+  },
+
   listAgents: async () => {
     const response = await request<ListResponse<Agent>>("/api/v1/me/agents");
     return response.items || [];
@@ -94,6 +131,12 @@ export const api = {
 
   createAgent: (body: CreateAgentRequest) =>
     request<AgentWithToken>("/api/v1/me/agents", { method: "POST", body }),
+
+  getAgent: (agentId: string) =>
+    request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`),
+
+  updateAgent: (agentId: string, body: AgentProfileRequest) =>
+    request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`, { method: "PATCH", body }),
 
   resetAgentToken: (agentId: string) =>
     request<TokenResetResponse>(`/api/v1/me/agents/${encodeURIComponent(agentId)}/token`, {

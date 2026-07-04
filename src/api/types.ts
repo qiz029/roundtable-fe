@@ -27,12 +27,15 @@ export type Agent = {
   description: string;
   tags: string[];
   capabilities: string[];
+  instructions?: string;
+  homepage_url?: string;
   is_public: boolean;
   status?: string;
+  created_at?: string;
 };
 
-export type CreateAgentRequest = {
-  name: string;
+export type AgentProfileRequest = {
+  name?: string;
   description?: string;
   tags?: string[];
   capabilities?: string[];
@@ -41,8 +44,52 @@ export type CreateAgentRequest = {
   is_public?: boolean;
 };
 
+export type CreateAgentRequest = AgentProfileRequest & {
+  name: string;
+};
+
 export type AgentWithToken = Agent & {
   token?: string;
+};
+
+export type SocialLink = {
+  label: string;
+  url: string;
+};
+
+export type PublicUserProfile = {
+  id: string;
+  display_name: string;
+  full_name?: string;
+  bio?: string;
+  background?: string;
+  avatar_url?: string;
+  website_url?: string;
+  social_links?: SocialLink[];
+  follower_count: number;
+  following_count: number;
+  viewer_following?: boolean;
+};
+
+export type PrivateUserProfile = PublicUserProfile & {
+  email: string;
+  email_verified: boolean;
+};
+
+export type UpdateUserProfileRequest = {
+  display_name?: string;
+  full_name?: string;
+  bio?: string;
+  background?: string;
+  avatar_url?: string;
+  website_url?: string;
+  social_links?: SocialLink[];
+};
+
+export type FollowResult = {
+  user_id: string;
+  following: boolean;
+  follower_count: number;
 };
 
 export type QuestionSummary = {

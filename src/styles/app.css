@@ -314,6 +314,51 @@ main {
   font-size: 12px;
 }
 
+.agentAvatarLarge {
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+  font-size: 25px;
+}
+
+.profileAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e3ecfe;
+  color: var(--blue);
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileAvatar-sm {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.profileAvatar-md {
+  width: 48px;
+  height: 48px;
+  font-size: 17px;
+}
+
+.profileAvatar-lg {
+  width: 76px;
+  height: 76px;
+  font-size: 25px;
+}
+
 .noticeBar,
 .apiBanner {
   width: min(100% - 32px, 1224px);
@@ -1244,6 +1289,347 @@ main {
   line-height: 1.6;
 }
 
+.agentInstructionPreview {
+  max-height: 70px;
+  overflow: hidden;
+  border-left: 3px solid var(--line-strong);
+  padding-left: 10px;
+  color: var(--muted) !important;
+}
+
+.agentCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.profileExternalLink {
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profileShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 18px;
+  align-items: start;
+}
+
+.profileEditor,
+.profilePreview,
+.profilePage,
+.agentManagePage {
+  min-width: 0;
+}
+
+.profileSectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.profileSectionHeader h1,
+.publicProfileHero h1,
+.agentManageHero h1 {
+  margin: 7px 0 0;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(27px, 4vw, 38px);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.saveState {
+  border-radius: 3px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 8px;
+}
+
+.profileForm,
+.agentManageGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.profilePanel,
+.profilePreview,
+.publicProfileHero,
+.agentManageHero {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+}
+
+.profilePanel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.profilePanel h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+}
+
+.profilePanel h2 span {
+  color: var(--faint);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.profilePanel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.profileForm label,
+.profilePanel label,
+.agentManageGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.profileForm input,
+.profileForm textarea,
+.profilePanel input,
+.profilePanel textarea,
+.agentManageGrid input,
+.agentManageGrid textarea {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 11px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.profileForm textarea,
+.profilePanel textarea,
+.agentManageGrid textarea {
+  resize: vertical;
+}
+
+.profileForm input:focus,
+.profileForm textarea:focus,
+.profilePanel input:focus,
+.profilePanel textarea:focus,
+.agentManageGrid input:focus,
+.agentManageGrid textarea:focus {
+  outline: 0;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.11);
+}
+
+.profilePanel .switchRow input,
+.agentManageGrid .switchRow input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  accent-color: var(--blue);
+  box-shadow: none;
+}
+
+.profileAvatarRow {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.profileAvatarRow p {
+  margin: 0 0 10px;
+}
+
+.twoColumnFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.profilePreview {
+  position: sticky;
+  top: calc(var(--topbar-height) + 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 20px;
+}
+
+.profilePreview h2 {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 22px;
+}
+
+.profilePreview > span:not(.eyebrow):not(.profileAvatar) {
+  color: var(--faint);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+}
+
+.profilePreview p {
+  margin: 0;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.profileStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.profileStats b {
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 15px;
+}
+
+.profileLinkList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profileLinkList a {
+  border-radius: 3px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 8px;
+}
+
+.publicProfileHero,
+.agentManageHero {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.publicProfileMain,
+.agentManageHero > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.profileNameLine {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profileNameLine h1,
+.agentManageHero h1 {
+  margin: 0;
+}
+
+.profileNameLine span {
+  color: var(--faint);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+.publicProfileMain p,
+.agentManageHero p {
+  max-width: 720px;
+  margin: 8px 0 10px;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.profileActions {
+  display: flex;
+  flex: none;
+  gap: 10px;
+}
+
+.profileContentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.profileMiniList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profileMiniRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.profileMiniRow:hover {
+  background: var(--surface-3);
+}
+
+.profileMiniRow span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.profileMiniRow b {
+  color: var(--ink);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileMiniRow small {
+  color: var(--faint);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+}
+
+.agentManageGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 260px;
+  align-items: start;
+}
+
+.agentSettingsPanel {
+  position: sticky;
+  top: calc(var(--topbar-height) + 18px);
+}
+
 .tokenPanel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1399,8 +1785,16 @@ main {
     margin-top: 0;
   }
 
-  .agentGrid {
+  .agentGrid,
+  .profileShell,
+  .profileContentGrid,
+  .agentManageGrid {
     grid-template-columns: 1fr;
+  }
+
+  .profilePreview,
+  .agentSettingsPanel {
+    position: static;
   }
 }
 
@@ -1435,8 +1829,19 @@ main {
   .detailGrid,
   .formPage,
   .authPage,
-  .agentFormPage {
+  .agentFormPage,
+  .twoColumnFields {
     grid-template-columns: 1fr;
+  }
+
+  .publicProfileHero,
+  .agentManageHero {
+    flex-direction: column;
+  }
+
+  .profileActions {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .leftRail {

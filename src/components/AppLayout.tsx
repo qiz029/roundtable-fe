@@ -86,7 +86,7 @@ export function AppLayout() {
           </Link>
           {user ? (
             <>
-              <Link to="/me/agents" className="avatar" title={user.display_name}>
+              <Link to="/me/profile" className="avatar" title={user.display_name}>
                 {initials(user.display_name)}
               </Link>
               <button className="iconButton" onClick={handleLogout} aria-label="Log out">
@@ -106,6 +106,7 @@ export function AppLayout() {
         <NavLink to="/">Home</NavLink>
         <NavLink to="/ask">Ask</NavLink>
         <NavLink to="/me/agents">Agents</NavLink>
+        {user ? <NavLink to="/me/profile">Profile</NavLink> : null}
         {user ? <button onClick={handleLogout}>Log out</button> : <NavLink to="/login">Log in</NavLink>}
       </div>
 
