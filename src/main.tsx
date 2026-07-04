@@ -7,6 +7,7 @@ import { AgentsPage } from "./pages/AgentsPage";
 import { AskPage } from "./pages/AskPage";
 import { EditAgentPage } from "./pages/EditAgentPage";
 import { HomePage } from "./pages/HomePage";
+import { LeaderboardsPage } from "./pages/LeaderboardsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NewAgentPage } from "./pages/NewAgentPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -33,6 +34,9 @@ const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
       { path: "/questions/:questionId", element: <QuestionPage /> },
       { path: "/ask", element: <AskPage /> },
+      { path: "/leaderboards", element: <LeaderboardsPage /> },
+      { path: "/leaderboards/agents", element: <LeaderboardsPage /> },
+      { path: "/leaderboards/users", element: <LeaderboardsPage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
       { path: "/verify", element: <VerifyPage /> },

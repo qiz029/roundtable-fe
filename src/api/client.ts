@@ -1,7 +1,9 @@
 import { apiBaseUrl } from "../config";
 import type {
   Agent,
+  AgentListResult,
   AgentProfileRequest,
+  AgentScoreItem,
   AgentWithToken,
   ApiErrorPayload,
   CreateAgentRequest,
@@ -19,6 +21,7 @@ import type {
   TokenResetResponse,
   UpdateUserProfileRequest,
   User,
+  UserScoreItem,
 } from "./types";
 
 export class ApiError extends Error {
@@ -40,6 +43,10 @@ type RequestOptions = {
 
 type ListQuestionsParams = {
   q?: string;
+};
+
+type PeriodParams = {
+  period?: string;
 };
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -125,8 +132,13 @@ export const api = {
   },
 
   listAgents: async () => {
-    const response = await request<ListResponse<Agent>>("/api/v1/me/agents");
-    return response.items || [];
+    const response = await request<ListResponse<Agent> & Partial<AgentListResult>>("/api/v1/me/agents");
+    const items = response.items || [];
+    return {
+      items,
+      agent_limit: response.agent_limit ?? 3,
+      active_count: response.active_count ?? items.filter((agent) => agent.status !== "paused").length,
+    };
   },
 
   createAgent: (body: CreateAgentRequest) =>
@@ -142,6 +154,62 @@ export const api = {
     request<TokenResetResponse>(`/api/v1/me/agents/${encodeURIComponent(agentId)}/token`, {
       method: "POST",
     }),
+
+  listAgentLeaderboard: async (params: PeriodParams = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.period) {
+      searchParams.set("period", params.period);
+    }
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<AgentScoreItem>>(
+      `/api/v1/leaderboards/agents${query ? `?${query}` : ""}`,
+    );
+    return response.items || [];
+  },
+
+  listUserLeaderboard: async (params: PeriodParams = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.period) {
+      searchParams.set("period", params.period);
+    }
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<UserScoreItem>>(
+      `/api/v1/leaderboards/users${query ? `?${query}` : ""}`,
+    );
+    return response.items || [];
+  },
+
+  getAgentScores: (agentId: string, params: PeriodParams = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.period) {
+      searchParams.set("period", params.period);
+    }
+
+    const query = searchParams.toString();
+    return request<AgentScoreItem>(`/api/v1/agents/${encodeURIComponent(agentId)}/scores${query ? `?${query}` : ""}`);
+  },
+
+  getUserScores: (userId: string, params: PeriodParams = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.period) {
+      searchParams.set("period", params.period);
+    }
+
+    const query = searchParams.toString();
+    return request<UserScoreItem>(`/api/v1/users/${encodeURIComponent(userId)}/scores${query ? `?${query}` : ""}`);
+  },
+
+  getMyRewards: (params: PeriodParams = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.period) {
+      searchParams.set("period", params.period);
+    }
+
+    const query = searchParams.toString();
+    return request<UserScoreItem>(`/api/v1/me/rewards${query ? `?${query}` : ""}`);
+  },
 
   listQuestions: async (params: ListQuestionsParams = {}) => {
     const searchParams = new URLSearchParams();

@@ -1,7 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import type { AgentStatus } from "../api/types";
 import { PillInput } from "../components/Pill";
 import { TokenPanel } from "../components/TokenPanel";
 import { displayedApiBaseUrl } from "../config";
@@ -17,6 +18,22 @@ export function NewAgentPage() {
   const [instructions, setInstructions] = useState("");
   const [homepageUrl, setHomepageUrl] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+  const [status, setStatus] = useState<AgentStatus>("active");
+
+  const agents = useQuery({
+    queryKey: ["agents"],
+    queryFn: api.listAgents,
+    enabled: Boolean(currentUser.data),
+  });
+
+  const activeCount = agents.data?.active_count || 0;
+  const agentLimit = agents.data?.agent_limit || 3;
+  const activeLimitReached = activeCount >= agentLimit;
+
+  useEffect(() => {
+    if (!activeLimitReached) return;
+    setStatus((current) => (current === "active" ? "paused" : current));
+  }, [activeLimitReached]);
 
   const createAgent = useMutation({
     mutationFn: api.createAgent,
@@ -35,6 +52,7 @@ export function NewAgentPage() {
       instructions,
       homepage_url: homepageUrl,
       is_public: isPublic,
+      status,
     });
   }
 
@@ -67,6 +85,14 @@ export function NewAgentPage() {
                 ? "Your verified account can create agents."
                 : "The backend requires a verified email before creating agents."}
             </p>
+            {agents.data ? (
+              <div className="agentQuotaBar agentQuotaInline">
+                <span>
+                  <b>{activeCount}</b> / {agentLimit} active agents
+                </span>
+                {activeLimitReached ? <span>New agents should start paused until an active slot is free.</span> : null}
+              </div>
+            ) : null}
           </div>
 
           <label>
@@ -130,6 +156,29 @@ export function NewAgentPage() {
               onChange={(event) => setIsPublic(event.target.checked)}
             />
           </label>
+
+          <div className="fieldGroup">
+            <span className="fieldLabel">Initial status</span>
+            <div className="statusSegmentGroup">
+              <button
+                className={status === "active" ? "active" : undefined}
+                disabled={activeLimitReached}
+                onClick={() => setStatus("active")}
+                type="button"
+              >
+                <b>Active</b>
+                <small>Receives invites and appears on the leaderboard.</small>
+              </button>
+              <button
+                className={status === "paused" ? "active" : undefined}
+                onClick={() => setStatus("paused")}
+                type="button"
+              >
+                <b>Paused</b>
+                <small>No invites, no active slot usage.</small>
+              </button>
+            </div>
+          </div>
 
           {createAgent.error ? <div className="errorCard">{getErrorMessage(createAgent.error)}</div> : null}
 

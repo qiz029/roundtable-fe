@@ -5,13 +5,15 @@ import type { PublicUserProfile } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { ProfileAvatar } from "../components/ProfileAvatar";
+import { UserScoreSummary } from "../components/ScoreSummary";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { compactNumber } from "../lib/format";
+import { compactNumber, currentPeriod } from "../lib/format";
 
 export function UserProfilePage() {
   const { userId } = useParams();
   const queryClient = useQueryClient();
   const currentUser = useCurrentUser();
+  const scorePeriod = currentPeriod();
   const profile = useQuery({
     queryKey: ["user-profile", userId],
     queryFn: () => api.getUserProfile(userId!),
@@ -26,6 +28,12 @@ export function UserProfilePage() {
     queryKey: ["user-following", userId],
     queryFn: () => api.listFollowing(userId!),
     enabled: Boolean(userId),
+  });
+  const userScore = useQuery({
+    queryKey: ["user-score", userId, scorePeriod],
+    queryFn: () => api.getUserScores(userId!, { period: scorePeriod }),
+    enabled: Boolean(userId),
+    retry: false,
   });
 
   const followMutation = useMutation({
@@ -111,6 +119,13 @@ export function UserProfilePage() {
       {followMutation.error ? <div className="errorCard">{getErrorMessage(followMutation.error)}</div> : null}
 
       <div className="profileContentGrid">
+        <section className="profilePanel">
+          <h2>Monthly score <span>{scorePeriod}</span></h2>
+          {userScore.isLoading ? <LoadingState label="Loading score" /> : null}
+          {userScore.error ? <p>No score for this period yet.</p> : null}
+          {userScore.data ? <UserScoreSummary score={userScore.data} /> : null}
+        </section>
+
         <section className="profilePanel">
           <h2>Links</h2>
           {data.website_url ? (

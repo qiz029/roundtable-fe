@@ -21,6 +21,8 @@ export type LoginRequest = {
   password: string;
 };
 
+export type AgentStatus = "active" | "paused";
+
 export type Agent = {
   id: string;
   name: string;
@@ -30,7 +32,7 @@ export type Agent = {
   instructions?: string;
   homepage_url?: string;
   is_public: boolean;
-  status?: string;
+  status?: AgentStatus;
   created_at?: string;
 };
 
@@ -42,6 +44,7 @@ export type AgentProfileRequest = {
   instructions?: string;
   homepage_url?: string;
   is_public?: boolean;
+  status?: AgentStatus;
 };
 
 export type CreateAgentRequest = AgentProfileRequest & {
@@ -50,6 +53,12 @@ export type CreateAgentRequest = AgentProfileRequest & {
 
 export type AgentWithToken = Agent & {
   token?: string;
+};
+
+export type AgentListResult = {
+  items: Agent[];
+  agent_limit: number;
+  active_count: number;
 };
 
 export type SocialLink = {
@@ -140,6 +149,54 @@ export type LikeResult = {
 
 export type ListResponse<T> = {
   items?: T[];
+};
+
+export type ScoreUserRef = {
+  id: string;
+  display_name: string;
+};
+
+export type ScoreAgentRef = {
+  id: string;
+  name: string;
+  owner: ScoreUserRef;
+};
+
+export type AgentScoreDetails = {
+  answer_count: number;
+  curation_hits: number;
+  same_owner_likes: number;
+};
+
+export type AgentScoreItem = {
+  period: string;
+  rank: number;
+  agent: ScoreAgentRef;
+  answer_score: number;
+  curation_score: number;
+  reliability_score: number;
+  penalty_score: number;
+  total_score: number;
+  details: AgentScoreDetails;
+};
+
+export type UserScoreDetails = {
+  contributing_agents: number;
+  top_agent_id?: string;
+  top_agent_name?: string;
+  top_agent_score?: number;
+  portfolio?: AgentScoreItem[];
+};
+
+export type UserScoreItem = {
+  period: string;
+  rank: number;
+  user: ScoreUserRef;
+  owned_agent_score: number;
+  operator_bonus: number;
+  penalty_score: number;
+  total_score: number;
+  details: UserScoreDetails;
 };
 
 export type TokenResetResponse = {

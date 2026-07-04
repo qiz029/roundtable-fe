@@ -3,18 +3,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
-import type { Agent } from "../api/types";
+import type { Agent, AgentStatus } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { PillInput } from "../components/Pill";
+import { AgentScoreSummary } from "../components/ScoreSummary";
 import { TokenPanel } from "../components/TokenPanel";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { formatDateTime, initials } from "../lib/format";
+import { currentPeriod, formatDateTime, initials } from "../lib/format";
 
 export function EditAgentPage() {
   const { agentId } = useParams();
   const queryClient = useQueryClient();
   const currentUser = useCurrentUser();
+  const scorePeriod = currentPeriod();
   const [latestToken, setLatestToken] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
@@ -24,12 +26,20 @@ export function EditAgentPage() {
     instructions: "",
     homepage_url: "",
     is_public: true,
+    status: "active" as AgentStatus,
   });
 
   const agent = useQuery({
     queryKey: ["agent", agentId],
     queryFn: () => api.getAgent(agentId!),
     enabled: Boolean(agentId && currentUser.data),
+  });
+
+  const agentScore = useQuery({
+    queryKey: ["agent-score", agentId, scorePeriod],
+    queryFn: () => api.getAgentScores(agentId!, { period: scorePeriod }),
+    enabled: Boolean(agentId && currentUser.data),
+    retry: false,
   });
 
   useEffect(() => {
@@ -42,6 +52,7 @@ export function EditAgentPage() {
       instructions: agent.data.instructions || "",
       homepage_url: agent.data.homepage_url || "",
       is_public: agent.data.is_public,
+      status: agent.data.status || "active",
     });
   }, [agent.data]);
 
@@ -55,6 +66,7 @@ export function EditAgentPage() {
         instructions: form.instructions.trim(),
         homepage_url: form.homepage_url.trim(),
         is_public: form.is_public,
+        status: form.status,
       }),
     onSuccess: async (result) => {
       queryClient.setQueryData<Agent>(["agent", agentId], result);
@@ -120,6 +132,7 @@ export function EditAgentPage() {
           <p>{form.description || "No description yet."}</p>
           <div className="profileStats">
             <span>{form.is_public ? "Public" : "Private"}</span>
+            <span>{form.status}</span>
             {agent.data.created_at ? <span>created {formatDateTime(agent.data.created_at)}</span> : null}
           </div>
         </div>
@@ -129,6 +142,13 @@ export function EditAgentPage() {
       {updateAgent.isSuccess ? <div className="successCard">Agent profile saved.</div> : null}
       {updateAgent.error ? <div className="errorCard">{getErrorMessage(updateAgent.error)}</div> : null}
       {resetToken.error ? <div className="errorCard">{getErrorMessage(resetToken.error)}</div> : null}
+
+      <section className="profilePanel scorePanel">
+        <h2>Monthly score <span>{scorePeriod}</span></h2>
+        {agentScore.isLoading ? <p>Loading score...</p> : null}
+        {agentScore.error ? <p>This agent has not scored in the selected period yet.</p> : null}
+        {agentScore.data ? <AgentScoreSummary score={agentScore.data} /> : null}
+      </section>
 
       <form className="agentManageGrid" onSubmit={handleSubmit}>
         <section className="profilePanel">
@@ -200,6 +220,27 @@ export function EditAgentPage() {
               onChange={(event) => updateField("is_public", event.target.checked)}
             />
           </label>
+          <div className="fieldGroup">
+            <span className="fieldLabel">Agent status</span>
+            <div className="statusSegmentGroup statusSegmentStack">
+              <button
+                className={form.status === "active" ? "active" : undefined}
+                onClick={() => updateField("status", "active" as AgentStatus)}
+                type="button"
+              >
+                <b>Active</b>
+                <small>Receives invites and appears on the leaderboard.</small>
+              </button>
+              <button
+                className={form.status === "paused" ? "active" : undefined}
+                onClick={() => updateField("status", "paused" as AgentStatus)}
+                type="button"
+              >
+                <b>Paused</b>
+                <small>No invites; token calls are unauthorized.</small>
+              </button>
+            </div>
+          </div>
           <button
             className="button buttonSecondary"
             disabled={resetToken.isPending}

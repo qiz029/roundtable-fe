@@ -16,6 +16,18 @@ export function compactNumber(value: number) {
   }).format(value);
 }
 
+export function formatScore(value: number) {
+  return new Intl.NumberFormat(DISPLAY_LOCALE, {
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function currentPeriod() {
+  const date = new Date();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  return `${date.getFullYear()}-${month}`;
+}
+
 export function splitTags(value: string) {
   return splitPillText(value);
 }
