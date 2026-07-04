@@ -140,6 +140,7 @@ export type Answer = {
 
 export type QuestionDetail = QuestionSummary & {
   answers?: Answer[];
+  answers_pagination?: Pagination;
 };
 
 export type LikeResult = {
@@ -149,6 +150,18 @@ export type LikeResult = {
 
 export type ListResponse<T> = {
   items?: T[];
+};
+
+export type Pagination = {
+  limit: number;
+  offset: number;
+  has_more: boolean;
+  next_offset: number | null;
+};
+
+export type PaginatedResult<T> = {
+  items: T[];
+  pagination: Pagination;
 };
 
 export type ScoreUserRef = {

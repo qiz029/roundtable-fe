@@ -1,26 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
 import { Info, Trophy } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { AgentLeaderboardTable, UserLeaderboardTable, UserScoreSummary } from "../components/ScoreSummary";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { currentPeriod, formatScore } from "../lib/format";
 
+const LEADERBOARD_PAGE_SIZE = 20;
+const LEADERBOARD_PAGES = [1, 2, 3, 4];
+
 export function LeaderboardsPage() {
   const currentUser = useCurrentUser();
   const location = useLocation();
   const [period, setPeriod] = useState(currentPeriod());
+  const [page, setPage] = useState(1);
   const activeTab = location.pathname.endsWith("/users") ? "users" : "agents";
+  const offset = (page - 1) * LEADERBOARD_PAGE_SIZE;
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, period]);
 
   const agentLeaderboard = useQuery({
-    queryKey: ["leaderboards", "agents", period],
-    queryFn: () => api.listAgentLeaderboard({ period }),
+    queryKey: ["leaderboards", "agents", period, page],
+    queryFn: () => api.listAgentLeaderboard({ period, limit: LEADERBOARD_PAGE_SIZE, offset }),
     enabled: activeTab === "agents",
   });
   const userLeaderboard = useQuery({
-    queryKey: ["leaderboards", "users", period],
-    queryFn: () => api.listUserLeaderboard({ period }),
+    queryKey: ["leaderboards", "users", period, page],
+    queryFn: () => api.listUserLeaderboard({ period, limit: LEADERBOARD_PAGE_SIZE, offset }),
     enabled: activeTab === "users",
   });
   const myRewards = useQuery({
@@ -29,6 +38,9 @@ export function LeaderboardsPage() {
     enabled: Boolean(currentUser.data),
     retry: false,
   });
+  const activeLeaderboard = activeTab === "agents" ? agentLeaderboard : userLeaderboard;
+  const pagination = activeLeaderboard.data?.pagination;
+  const pageItems = activeLeaderboard.data?.items || [];
 
   return (
     <div className="leaderboardPage">
@@ -90,21 +102,53 @@ export function LeaderboardsPage() {
           <>
             {agentLeaderboard.isLoading ? <p className="tableState">Loading agent leaderboard...</p> : null}
             {agentLeaderboard.error ? <div className="errorCard">{getErrorMessage(agentLeaderboard.error)}</div> : null}
-            {!agentLeaderboard.isLoading && !agentLeaderboard.error && agentLeaderboard.data?.length === 0 ? (
+            {!agentLeaderboard.isLoading && !agentLeaderboard.error && agentLeaderboard.data?.items.length === 0 ? (
               <p className="tableState">No agent scores for this period yet.</p>
             ) : null}
-            {agentLeaderboard.data?.length ? <AgentLeaderboardTable scores={agentLeaderboard.data} /> : null}
+            {agentLeaderboard.data?.items.length ? <AgentLeaderboardTable scores={agentLeaderboard.data.items} /> : null}
           </>
         ) : (
           <>
             {userLeaderboard.isLoading ? <p className="tableState">Loading user leaderboard...</p> : null}
             {userLeaderboard.error ? <div className="errorCard">{getErrorMessage(userLeaderboard.error)}</div> : null}
-            {!userLeaderboard.isLoading && !userLeaderboard.error && userLeaderboard.data?.length === 0 ? (
+            {!userLeaderboard.isLoading && !userLeaderboard.error && userLeaderboard.data?.items.length === 0 ? (
               <p className="tableState">No user scores for this period yet.</p>
             ) : null}
-            {userLeaderboard.data?.length ? <UserLeaderboardTable scores={userLeaderboard.data} /> : null}
+            {userLeaderboard.data?.items.length ? <UserLeaderboardTable scores={userLeaderboard.data.items} /> : null}
           </>
         )}
+        <div className="numberedPagination">
+          <span>
+            Page {page} · {pageItems.length} rows
+          </span>
+          <button
+            type="button"
+            className="button buttonSecondary buttonCompact"
+            disabled={page === 1 || activeLeaderboard.isFetching}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+          >
+            Prev
+          </button>
+          {LEADERBOARD_PAGES.map((pageNumber) => (
+            <button
+              type="button"
+              className={`pageNumberButton${page === pageNumber ? " active" : ""}`}
+              disabled={activeLeaderboard.isFetching}
+              onClick={() => setPage(pageNumber)}
+              key={pageNumber}
+            >
+              {pageNumber}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="button buttonSecondary buttonCompact"
+            disabled={page === LEADERBOARD_PAGES.length || !pagination?.has_more || activeLeaderboard.isFetching}
+            onClick={() => setPage((current) => Math.min(LEADERBOARD_PAGES.length, current + 1))}
+          >
+            Next
+          </button>
+        </div>
       </section>
     </div>
   );

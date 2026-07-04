@@ -12,6 +12,8 @@ import type {
   LikeResult,
   ListResponse,
   LoginRequest,
+  PaginatedResult,
+  Pagination,
   PrivateUserProfile,
   PublicUserProfile,
   QuestionCreated,
@@ -41,13 +43,45 @@ type RequestOptions = {
   body?: unknown;
 };
 
+type PageParams = {
+  limit?: number;
+  offset?: number;
+};
+
 type ListQuestionsParams = {
   q?: string;
-};
+} & PageParams;
 
 type PeriodParams = {
   period?: string;
 };
+
+type LeaderboardParams = PeriodParams & PageParams;
+
+function applyPageParams(searchParams: URLSearchParams, params: PageParams) {
+  if (params.limit != null) {
+    searchParams.set("limit", String(params.limit));
+  }
+  if (params.offset != null) {
+    searchParams.set("offset", String(params.offset));
+  }
+}
+
+function normalizePaginatedResult<T>(
+  response: ListResponse<T> & { pagination?: Pagination },
+  params: PageParams,
+): PaginatedResult<T> {
+  const items = response.items || [];
+  return {
+    items,
+    pagination: response.pagination || {
+      limit: params.limit ?? items.length,
+      offset: params.offset ?? 0,
+      has_more: false,
+      next_offset: null,
+    },
+  };
+}
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {
@@ -155,30 +189,32 @@ export const api = {
       method: "POST",
     }),
 
-  listAgentLeaderboard: async (params: PeriodParams = {}) => {
+  listAgentLeaderboard: async (params: LeaderboardParams = {}) => {
     const searchParams = new URLSearchParams();
     if (params.period) {
       searchParams.set("period", params.period);
     }
+    applyPageParams(searchParams, params);
 
     const query = searchParams.toString();
     const response = await request<ListResponse<AgentScoreItem>>(
       `/api/v1/leaderboards/agents${query ? `?${query}` : ""}`,
     );
-    return response.items || [];
+    return normalizePaginatedResult(response, params);
   },
 
-  listUserLeaderboard: async (params: PeriodParams = {}) => {
+  listUserLeaderboard: async (params: LeaderboardParams = {}) => {
     const searchParams = new URLSearchParams();
     if (params.period) {
       searchParams.set("period", params.period);
     }
+    applyPageParams(searchParams, params);
 
     const query = searchParams.toString();
     const response = await request<ListResponse<UserScoreItem>>(
       `/api/v1/leaderboards/users${query ? `?${query}` : ""}`,
     );
-    return response.items || [];
+    return normalizePaginatedResult(response, params);
   },
 
   getAgentScores: (agentId: string, params: PeriodParams = {}) => {
@@ -216,17 +252,25 @@ export const api = {
     if (params.q) {
       searchParams.set("q", params.q);
     }
+    applyPageParams(searchParams, params);
 
     const query = searchParams.toString();
-    const response = await request<ListResponse<QuestionSummary>>(`/api/v1/questions${query ? `?${query}` : ""}`);
-    return response.items || [];
+    const response = await request<ListResponse<QuestionSummary> & { pagination?: Pagination }>(
+      `/api/v1/questions${query ? `?${query}` : ""}`,
+    );
+    return normalizePaginatedResult(response, params);
   },
 
   createQuestion: (body: CreateQuestionRequest) =>
     request<QuestionCreated>("/api/v1/questions", { method: "POST", body }),
 
-  getQuestion: (questionId: string) =>
-    request<QuestionDetail>(`/api/v1/questions/${encodeURIComponent(questionId)}`),
+  getQuestion: (questionId: string, params: PageParams = {}) => {
+    const searchParams = new URLSearchParams();
+    applyPageParams(searchParams, params);
+
+    const query = searchParams.toString();
+    return request<QuestionDetail>(`/api/v1/questions/${encodeURIComponent(questionId)}${query ? `?${query}` : ""}`);
+  },
 
   likeAnswer: (answerId: string) =>
     request<LikeResult>(`/api/v1/answers/${encodeURIComponent(answerId)}/like`, {

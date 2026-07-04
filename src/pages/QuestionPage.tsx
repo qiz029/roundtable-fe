@@ -1,5 +1,6 @@
 import { ArrowLeft, Bot, ThumbsUp } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { useState } from "react";
 import { api } from "../api/client";
@@ -11,14 +12,24 @@ import { PillList } from "../components/Pill";
 import { getErrorMessage } from "../hooks/useAuth";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
 
+const ANSWER_PAGE_SIZE = 20;
+
 export function QuestionPage() {
   const { questionId } = useParams();
   const [likedAnswers, setLikedAnswers] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
+  const questionQueryKey = ["question", questionId, "answers"] as const;
 
-  const question = useQuery({
-    queryKey: ["question", questionId],
-    queryFn: () => api.getQuestion(questionId!),
+  const question = useInfiniteQuery({
+    queryKey: questionQueryKey,
+    queryFn: ({ pageParam }) =>
+      api.getQuestion(questionId!, {
+        limit: ANSWER_PAGE_SIZE,
+        offset: Number(pageParam),
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.answers_pagination?.has_more ? (lastPage.answers_pagination.next_offset ?? undefined) : undefined,
     enabled: Boolean(questionId),
   });
 
@@ -32,13 +43,16 @@ export function QuestionPage() {
         [variables.answerId]: !variables.liked,
       }));
 
-      queryClient.setQueryData<QuestionDetail>(["question", questionId], (current) => {
-        if (!current?.answers) return current;
+      queryClient.setQueryData<InfiniteData<QuestionDetail>>(questionQueryKey, (current) => {
+        if (!current) return current;
         return {
           ...current,
-          answers: current.answers.map((answer) =>
-            answer.id === result.answer_id ? { ...answer, like_count: result.like_count } : answer,
-          ),
+          pages: current.pages.map((page) => ({
+            ...page,
+            answers: page.answers?.map((answer) =>
+              answer.id === result.answer_id ? { ...answer, like_count: result.like_count } : answer,
+            ),
+          })),
         };
       });
     },
@@ -60,8 +74,8 @@ export function QuestionPage() {
     );
   }
 
-  const data = question.data;
-  const answers = data.answers || [];
+  const data = question.data.pages[0];
+  const answers = question.data.pages.flatMap((page) => page.answers || []);
 
   return (
     <div className="pageGrid detailGrid">
@@ -84,8 +98,11 @@ export function QuestionPage() {
         </article>
 
         <div className="sectionHeader">
-          <h2>{answers.length} Answers</h2>
-          <span>sorted by backend order</span>
+          <h2>{data.answer_count} Answers</h2>
+          <span>
+            {question.hasNextPage ? `${answers.length} loaded · ` : ""}
+            sorted by backend order
+          </span>
         </div>
 
         {answers.length === 0 ? (
@@ -108,6 +125,19 @@ export function QuestionPage() {
             ))}
           </div>
         )}
+
+        {question.hasNextPage ? (
+          <div className="paginationActions">
+            <button
+              className="button buttonSecondary"
+              type="button"
+              disabled={question.isFetchingNextPage}
+              onClick={() => question.fetchNextPage()}
+            >
+              {question.isFetchingNextPage ? "Loading..." : "Load more answers"}
+            </button>
+          </div>
+        ) : null}
       </section>
 
       <aside className="rightRail detailAside">
