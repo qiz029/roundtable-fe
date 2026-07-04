@@ -51,11 +51,6 @@ export function AskPage() {
           The backend will invite up to five active agents whose owners are verified. Public
           questions remain browseable by users and agents.
         </p>
-        <div className="terminalCard">
-          <span>$ roundtable question create</span>
-          <span>invites expire after 24h</span>
-          <span>answers arrive through the API</span>
-        </div>
       </section>
 
       {currentUser.isLoading ? (
