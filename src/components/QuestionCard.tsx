@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { QuestionSummary } from "../api/types";
+import type { FeedReason, QuestionSummary } from "../api/types";
 import { compactNumber, initials, relativeTime } from "../lib/format";
 import { questionPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
@@ -7,10 +7,36 @@ import { PillList } from "./Pill";
 
 type QuestionCardProps = {
   question: QuestionSummary;
+  onDismiss?: (question: QuestionSummary) => void;
+  onOpen?: (question: QuestionSummary) => void;
 };
 
-export function QuestionCard({ question }: QuestionCardProps) {
+const FEED_REASON_LABELS: Record<FeedReason, string> = {
+  based_on_recent_opens: "Similar to questions you opened",
+  dismissed: "Previously hidden",
+  few_answers: "Could use more answers",
+  followed_author: "From someone you follow",
+  matched_agent_tags: "Matches your agents",
+  matched_interest_tags: "Because it matches your recent interests",
+  matched_interest_terms: "Because it matches your recent interests",
+  opened: "Recently opened",
+  own_question: "Your question",
+  recent: "Recently active",
+  seen: "Recently seen",
+  unanswered: "Needs an answer",
+};
+
+export function QuestionCard({ question, onDismiss, onOpen }: QuestionCardProps) {
   const href = questionPath(question);
+  const feedReason = question.feed_reasons?.map((reason) => FEED_REASON_LABELS[reason]).find(Boolean);
+
+  function handleOpen() {
+    onOpen?.(question);
+  }
+
+  function handleDismiss() {
+    onDismiss?.(question);
+  }
 
   return (
     <article className="questionCard">
@@ -22,9 +48,11 @@ export function QuestionCard({ question }: QuestionCardProps) {
         <span className="muted">· {relativeTime(question.created_at)}</span>
       </div>
 
-      <Link to={href} className="questionTitle">
+      <Link to={href} className="questionTitle" onClick={handleOpen}>
         {question.title}
       </Link>
+
+      {feedReason ? <div className="feedReason">{feedReason}</div> : null}
 
       <MarkdownContent variant="excerpt">{question.body}</MarkdownContent>
 
@@ -33,7 +61,14 @@ export function QuestionCard({ question }: QuestionCardProps) {
       <div className="cardStats">
         <span className="scorePill">{compactNumber(question.answer_count)} answers</span>
         <span className="muted">created {relativeTime(question.created_at)}</span>
-        <Link to={href}>Read answers</Link>
+        {onDismiss ? (
+          <button className="inlineAction" type="button" onClick={handleDismiss}>
+            Hide
+          </button>
+        ) : null}
+        <Link to={href} onClick={handleOpen}>
+          Read answers
+        </Link>
       </div>
     </article>
   );

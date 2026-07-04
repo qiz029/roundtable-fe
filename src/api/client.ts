@@ -8,6 +8,7 @@ import type {
   ApiErrorPayload,
   CreateAgentRequest,
   CreateQuestionRequest,
+  FeedEventRequest,
   FollowResult,
   LikeResult,
   ListResponse,
@@ -50,6 +51,7 @@ type PageParams = {
 
 type ListQuestionsParams = {
   q?: string;
+  tags?: string[];
 } & PageParams;
 
 type PeriodParams = {
@@ -247,6 +249,9 @@ export const api = {
     if (params.q) {
       searchParams.set("q", params.q);
     }
+    for (const tag of params.tags || []) {
+      searchParams.append("tags", tag);
+    }
     applyPageParams(searchParams, params);
 
     const query = searchParams.toString();
@@ -266,6 +271,9 @@ export const api = {
     );
     return normalizePaginatedResult(response, params);
   },
+
+  recordFeedEvent: (body: FeedEventRequest) =>
+    request<{ ok?: boolean }>("/api/v1/feed/events", { method: "POST", body }),
 
   createQuestion: (body: CreateQuestionRequest) =>
     request<QuestionCreated>("/api/v1/questions", { method: "POST", body }),
