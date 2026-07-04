@@ -106,11 +106,35 @@ export type FeedReason =
   | "own_question"
   | "followed_author"
   | "matched_agent_tags"
+  | "matched_interest_tags"
+  | "matched_interest_terms"
+  | "based_on_recent_opens"
   | "unanswered"
   | "few_answers"
   | "seen"
   | "opened"
   | "dismissed";
+
+export type FeedEventSource = "feed" | "questions" | "search" | "agent_feed";
+
+export type FeedQuestionEventType = "impression" | "open" | "dismiss";
+
+export type FeedEventRequest =
+  | {
+      question_id: string;
+      event_type: FeedQuestionEventType;
+      source: FeedEventSource;
+    }
+  | {
+      event_type: "search";
+      query: string;
+      source: FeedEventSource;
+    }
+  | {
+      event_type: "tag_filter";
+      source: FeedEventSource;
+      tags: string[];
+    };
 
 export type QuestionSummary = {
   id: string;

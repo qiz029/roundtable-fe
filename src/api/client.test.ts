@@ -75,7 +75,9 @@ describe("api client", () => {
       }),
     );
 
-    await expect(api.listQuestions({ limit: 5, offset: 10, q: "hello world" })).resolves.toMatchObject({
+    await expect(
+      api.listQuestions({ limit: 5, offset: 10, q: "hello world", tags: ["backend"] }),
+    ).resolves.toMatchObject({
       items: [{ id: "q1" }],
       pagination: {
         has_more: false,
@@ -84,7 +86,36 @@ describe("api client", () => {
         offset: 10,
       },
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/v1/questions?q=hello+world&limit=5&offset=10", expect.any(Object));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/questions?q=hello+world&tags=backend&limit=5&offset=10",
+      expect.any(Object),
+    );
+  });
+
+  it("posts feed behavior events", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
+
+    await expect(
+      api.recordFeedEvent({
+        event_type: "open",
+        question_id: "q1",
+        source: "search",
+      }),
+    ).resolves.toEqual({ ok: true });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/feed/events",
+      expect.objectContaining({
+        body: JSON.stringify({
+          event_type: "open",
+          question_id: "q1",
+          source: "search",
+        }),
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      }),
+    );
   });
 
   it("normalizes agent list limits when the backend omits optional metadata", async () => {

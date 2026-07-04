@@ -159,12 +159,17 @@ main {
   font-weight: 600;
 }
 
-.searchShell {
-  height: 36px;
+.searchWrap {
+  position: relative;
   min-width: 220px;
   max-width: 430px;
   flex: 1;
   margin-left: auto;
+}
+
+.searchShell {
+  min-height: 36px;
+  width: 100%;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: var(--surface-3);
@@ -174,6 +179,12 @@ main {
   color: var(--faint);
   padding: 0 12px;
   font-size: 13px;
+}
+
+.searchShell:focus-within {
+  border-color: var(--blue);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
 }
 
 .searchShell input {
@@ -201,6 +212,12 @@ main {
   white-space: nowrap;
 }
 
+.searchShell .searchTagPill {
+  max-width: 126px;
+  flex: none;
+  padding: 3px 5px 3px 7px;
+}
+
 .searchShell kbd {
   margin-left: auto;
   padding: 2px 6px;
@@ -210,6 +227,76 @@ main {
   color: var(--faint);
   font-size: 10px;
   font-weight: 600;
+}
+
+.searchSuggestions {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  z-index: 35;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.searchSuggestion {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.searchSuggestion:last-child {
+  border-bottom: 0;
+}
+
+.searchSuggestion:hover {
+  background: var(--surface-2);
+}
+
+.searchSuggestionTitle {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchSuggestionBody {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.searchSuggestionMeta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.searchSuggestionTag {
+  overflow: hidden;
+  max-width: 112px;
+  color: var(--blue);
+  text-overflow: ellipsis;
 }
 
 .topbarActions {
@@ -631,6 +718,20 @@ main {
   font-weight: 700;
 }
 
+.feedReason {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: -2px 0 9px;
+  border-radius: 4px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  padding: 5px 8px;
+}
+
 .muted {
   color: var(--faint);
 }
@@ -788,6 +889,19 @@ main {
   margin-left: auto;
   color: var(--blue);
   font-weight: 700;
+}
+
+.inlineAction {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.inlineAction:hover {
+  color: var(--red);
 }
 
 .scorePill {
@@ -2675,7 +2789,7 @@ main {
   }
 
   .primaryNav,
-  .searchShell,
+  .searchWrap,
   .topbarActions .buttonPrimary span,
   .topbarActions .buttonSecondary span {
     display: none;

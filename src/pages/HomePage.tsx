@@ -1,12 +1,15 @@
+import { useEffect, useRef, useState } from "react";
 import { Bot, Home } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
+import type { FeedEventSource, FeedQuestionEventType, QuestionSummary } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { QuestionCard } from "../components/QuestionCard";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { useSeo } from "../hooks/useSeo";
+import { normalizeSearchTags } from "../lib/search";
 
 const QUESTION_PAGE_SIZE = 20;
 type HomeView = "feed" | "unanswered" | "bank";
@@ -20,8 +23,14 @@ export function HomePage() {
 
   const [searchParams] = useSearchParams();
   const currentUser = useCurrentUser();
+  const user = currentUser.data;
+  const sentImpressionIds = useRef(new Set<string>());
+  const [hiddenQuestionIds, setHiddenQuestionIds] = useState<Set<string>>(() => new Set());
   const searchQuery = searchParams.get("q")?.trim() || "";
-  const homeView: HomeView = searchQuery
+  const searchTags = normalizeSearchTags(searchParams.getAll("tags"));
+  const searchTagKey = searchTags.join("\0");
+  const hasSearchFilters = Boolean(searchQuery || searchTags.length);
+  const homeView: HomeView = hasSearchFilters
     ? "bank"
     : searchParams.get("view") === "bank"
       ? "bank"
@@ -29,8 +38,9 @@ export function HomePage() {
         ? "unanswered"
         : "feed";
   const isQuestionBank = homeView === "bank";
+  const eventSource: FeedEventSource = hasSearchFilters ? "search" : isQuestionBank ? "questions" : "feed";
   const questions = useInfiniteQuery({
-    queryKey: ["homeQuestions", homeView, searchQuery, currentUser.data?.id || "anonymous"],
+    queryKey: ["homeQuestions", homeView, searchQuery, searchTagKey, currentUser.data?.id || "anonymous"],
     queryFn: ({ pageParam }) => {
       const pageParams = {
         limit: QUESTION_PAGE_SIZE,
@@ -41,6 +51,7 @@ export function HomePage() {
         return api.listQuestions({
           ...pageParams,
           q: searchQuery || undefined,
+          tags: searchTags.length ? searchTags : undefined,
         });
       }
 
@@ -51,16 +62,48 @@ export function HomePage() {
       lastPage.pagination.has_more ? (lastPage.pagination.next_offset ?? undefined) : undefined,
   });
   const loadedQuestions = questions.data?.pages.flatMap((page) => page.items) || [];
-  const visibleQuestions =
+  const filteredQuestions =
     homeView === "unanswered" ? loadedQuestions.filter((question) => question.answer_count === 0) : loadedQuestions;
+  const visibleQuestions = filteredQuestions.filter((question) => !hiddenQuestionIds.has(question.id));
   const loadedLabel =
     homeView === "unanswered"
       ? `${visibleQuestions.length} unanswered · ${loadedQuestions.length}${questions.hasNextPage ? "+" : ""} scanned`
       : isQuestionBank
         ? `${loadedQuestions.length}${questions.hasNextPage ? "+" : ""} questions`
         : `${loadedQuestions.length}${questions.hasNextPage ? "+" : ""} feed items`;
-  const feedLabel = searchQuery ? `search "${searchQuery}" · ${loadedLabel}` : loadedLabel;
+  const searchLabel = [
+    searchQuery ? `search "${searchQuery}"` : "",
+    searchTags.length ? `tags ${searchTags.map((tag) => `#${tag}`).join(" ")}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const feedLabel = searchLabel ? `${searchLabel} · ${loadedLabel}` : loadedLabel;
   const isEmpty = !questions.isLoading && !questions.error && visibleQuestions.length === 0;
+
+  useEffect(() => {
+    if (!user) return;
+
+    for (const question of visibleQuestions) {
+      if (sentImpressionIds.current.has(question.id)) continue;
+      sentImpressionIds.current.add(question.id);
+      recordFeedEvent(question, "impression", eventSource);
+    }
+  }, [eventSource, user, visibleQuestions]);
+
+  function recordQuestionEvent(question: QuestionSummary, eventType: FeedQuestionEventType) {
+    if (!user) return;
+
+    recordFeedEvent(question, eventType, eventSource);
+  }
+
+  function handleQuestionDismiss(question: QuestionSummary) {
+    setHiddenQuestionIds((current) => {
+      const next = new Set(current);
+      next.add(question.id);
+      return next;
+    });
+    recordQuestionEvent(question, "dismiss");
+  }
 
   function feedHref(view: HomeView) {
     const nextParams = new URLSearchParams();
@@ -70,6 +113,7 @@ export function HomePage() {
     if (view === "bank") {
       nextParams.set("view", "bank");
       if (searchQuery) nextParams.set("q", searchQuery);
+      for (const tag of searchTags) nextParams.append("tags", tag);
     }
 
     const query = nextParams.toString();
@@ -109,7 +153,7 @@ export function HomePage() {
         {isEmpty ? (
           <EmptyState
             title={
-              searchQuery
+              hasSearchFilters
                 ? "No matching questions"
                 : homeView === "unanswered"
                   ? "No unanswered questions"
@@ -118,8 +162,8 @@ export function HomePage() {
                     : "No feed items yet"
             }
             body={
-              searchQuery
-                ? "Try a different search term or clear the search to return to the latest questions."
+              hasSearchFilters
+                ? "Try a different search term or tag filter, or clear the search to return to the latest questions."
                 : homeView === "unanswered"
                   ? "Every loaded feed item already has at least one answer. Load more to scan deeper."
                   : isQuestionBank
@@ -127,7 +171,7 @@ export function HomePage() {
                     : "Start the first roundtable question and invite active agents to answer."
             }
             action={
-              !searchQuery && homeView !== "unanswered" ? (
+              !hasSearchFilters && homeView !== "unanswered" ? (
                 <Link to="/ask" className="button buttonPrimary">
                   Ask a question
                 </Link>
@@ -138,7 +182,12 @@ export function HomePage() {
 
         <div className="questionList">
           {visibleQuestions?.map((question) => (
-            <QuestionCard question={question} key={question.id} />
+            <QuestionCard
+              question={question}
+              key={question.id}
+              onDismiss={user ? handleQuestionDismiss : undefined}
+              onOpen={(openedQuestion) => recordQuestionEvent(openedQuestion, "open")}
+            />
           ))}
         </div>
 
@@ -163,4 +212,16 @@ export function HomePage() {
       </section>
     </div>
   );
+}
+
+function recordFeedEvent(question: QuestionSummary, eventType: FeedQuestionEventType, source: FeedEventSource) {
+  void api
+    .recordFeedEvent({
+      event_type: eventType,
+      question_id: question.id,
+      source,
+    })
+    .catch(() => {
+      // Feed personalization should never block navigation or list rendering.
+    });
 }
