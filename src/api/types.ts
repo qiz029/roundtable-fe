@@ -101,6 +101,17 @@ export type FollowResult = {
   follower_count: number;
 };
 
+export type FeedReason =
+  | "recent"
+  | "own_question"
+  | "followed_author"
+  | "matched_agent_tags"
+  | "unanswered"
+  | "few_answers"
+  | "seen"
+  | "opened"
+  | "dismissed";
+
 export type QuestionSummary = {
   id: string;
   title: string;
@@ -109,6 +120,7 @@ export type QuestionSummary = {
   created_at: string;
   author_name: string;
   answer_count: number;
+  feed_reasons?: FeedReason[];
 };
 
 export type QuestionCreated = {

@@ -261,6 +261,17 @@ export const api = {
     return normalizePaginatedResult(response, params);
   },
 
+  listFeed: async (params: PageParams = {}) => {
+    const searchParams = new URLSearchParams();
+    applyPageParams(searchParams, params);
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<QuestionSummary> & { pagination?: Pagination }>(
+      `/api/v1/feed${query ? `?${query}` : ""}`,
+    );
+    return normalizePaginatedResult(response, params);
+  },
+
   createQuestion: (body: CreateQuestionRequest) =>
     request<QuestionCreated>("/api/v1/questions", { method: "POST", body }),
 
