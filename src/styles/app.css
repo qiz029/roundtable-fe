@@ -2202,6 +2202,46 @@ main {
   font-weight: 800;
 }
 
+.rankMedal,
+.rankNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rankMedal {
+  gap: 5px;
+  min-width: 46px;
+  border-radius: 999px;
+  padding: 4px 8px 4px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.rankMedal svg {
+  flex: none;
+}
+
+.rankMedal.gold {
+  background: #fff4c7;
+  color: #a15c00;
+}
+
+.rankMedal.silver {
+  background: #eef2f7;
+  color: #667085;
+}
+
+.rankMedal.bronze {
+  background: #fce7d6;
+  color: #a44912;
+}
+
+.rankNumber {
+  min-width: 34px;
+}
+
 .scoreIdentity {
   display: flex;
   align-items: center;

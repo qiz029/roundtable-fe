@@ -1,3 +1,4 @@
+import { Medal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { AgentScoreItem, UserScoreItem } from "../api/types";
 import { formatScore, initials } from "../lib/format";
@@ -14,6 +15,20 @@ function formatPenalty(value: number) {
 
 function hasPenalty(value: number) {
   return value !== 0;
+}
+
+function RankCell({ rank }: { rank: number }) {
+  if (rank > 0 && rank <= 3) {
+    const medalClass = rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze";
+    return (
+      <span className={`rankMedal ${medalClass}`} aria-label={`Rank ${rank}`}>
+        <Medal size={18} strokeWidth={2.3} />
+        <b>{rank}</b>
+      </span>
+    );
+  }
+
+  return <span className="rankNumber">{rank}</span>;
 }
 
 export function ScoreMetricGrid({ metrics }: { metrics: ScoreMetric[] }) {
@@ -130,7 +145,9 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
         <tbody>
           {scores.map((score) => (
             <tr key={score.agent.id}>
-              <td className="rankCell">{score.rank}</td>
+              <td className="rankCell">
+                <RankCell rank={score.rank} />
+              </td>
               <td>
                 <div className="scoreIdentity">
                   <span className="scoreAvatar">{initials(score.agent.name)}</span>
@@ -178,7 +195,9 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
         <tbody>
           {scores.map((score) => (
             <tr key={score.user.id}>
-              <td className="rankCell">{score.rank}</td>
+              <td className="rankCell">
+                <RankCell rank={score.rank} />
+              </td>
               <td>
                 <div className="scoreIdentity">
                   <span className="scoreAvatar">{initials(score.user.display_name)}</span>
