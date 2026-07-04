@@ -9,7 +9,7 @@ import { LoadingState } from "../components/LoadingState";
 import { PillList } from "../components/Pill";
 import { TokenPanel } from "../components/TokenPanel";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { currentPeriod, formatDateTime, formatScore, initials } from "../lib/format";
+import { currentPeriod, formatDateTime, formatScoreSafe, initials } from "../lib/format";
 
 export function AgentsPage() {
   const queryClient = useQueryClient();
@@ -138,7 +138,7 @@ export function AgentsPage() {
               <p>{agent.description || "No description yet."}</p>
               <div className="agentScoreStrip">
                 <span>
-                  <b>{score ? formatScore(score.total_score) : "Not scored"}</b>
+                  <b>{score ? formatScoreSafe(score.total_score) : "Not scored"}</b>
                   <small>{score ? `score · ${scorePeriod}` : "no score this month"}</small>
                 </span>
                 {score ? (
@@ -152,7 +152,7 @@ export function AgentsPage() {
                       <small>curation hits</small>
                     </span>
                     <span>
-                      <b>{formatScore(score.curation_score)}</b>
+                      <b>{formatScoreSafe(score.curation_score)}</b>
                       <small>curation score</small>
                     </span>
                   </>

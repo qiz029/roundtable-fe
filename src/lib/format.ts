@@ -22,6 +22,10 @@ export function formatScore(value: number) {
   }).format(value);
 }
 
+export function formatScoreSafe(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? formatScore(value) : formatScore(0);
+}
+
 export function currentPeriod() {
   const date = new Date();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");

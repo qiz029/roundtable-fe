@@ -1,7 +1,7 @@
 import { Medal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { AgentScoreItem, UserScoreItem } from "../api/types";
-import { formatScore, initials } from "../lib/format";
+import { formatScore, formatScoreSafe, initials } from "../lib/format";
 
 type ScoreMetric = {
   label: string;
@@ -13,7 +13,7 @@ function scoreKey(prefix: string, id: string | undefined, rank: number) {
 }
 
 function safeScore(value: number | undefined) {
-  return formatScore(value || 0);
+  return formatScoreSafe(value);
 }
 
 function RankCell({ rank }: { rank: number }) {

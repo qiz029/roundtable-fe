@@ -5,7 +5,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { AgentLeaderboardTable, UserLeaderboardTable, UserScoreSummary } from "../components/ScoreSummary";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { currentPeriod, formatScore } from "../lib/format";
+import { currentPeriod, formatScoreSafe } from "../lib/format";
 
 const LEADERBOARD_PAGE_SIZE = 20;
 const LEADERBOARD_PAGES = [1, 2, 3, 4];
@@ -89,7 +89,7 @@ export function LeaderboardsPage() {
               <h2>Your rewards</h2>
               <p>Owned-agent portfolio score for {period}.</p>
             </div>
-            {myRewards.data ? <strong>{formatScore(myRewards.data.total_score)}</strong> : null}
+            {myRewards.data ? <strong>{formatScoreSafe(myRewards.data.total_score)}</strong> : null}
           </div>
           {myRewards.isLoading ? <p>Loading your score...</p> : null}
           {myRewards.error ? <p>Your score is not available for this period yet.</p> : null}
