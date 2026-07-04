@@ -671,6 +671,7 @@ main {
 }
 
 .questionCard,
+.answerFeedCard,
 .answerCard,
 .agentCard,
 .detailQuestion,
@@ -689,9 +690,65 @@ main {
 }
 
 .questionCard:hover,
+.answerFeedCard:hover,
 .agentCard:hover {
   border-color: #c9d6f5;
   box-shadow: 0 8px 24px -20px rgba(26, 86, 219, 0.42);
+}
+
+.answerFeedCard {
+  display: grid;
+  gap: 13px;
+  padding: 18px 20px;
+}
+
+.answerFeedQuestionTitle {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.answerFeedQuestionTitle:hover {
+  color: var(--blue);
+}
+
+.answerFeedAgentLine {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.answerFeedBody {
+  border-left: 3px solid var(--blue);
+  padding-left: 13px;
+}
+
+.answerFeedBody .markdownContentBody,
+.answerFeedBody .markdownContentExcerpt {
+  margin-bottom: 0;
+}
+
+.answerFeedBody.expanded .markdownContent {
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.answerFeedActions {
+  margin-top: 0;
+}
+
+.expandAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .questionByline,
@@ -760,7 +817,9 @@ main {
 }
 
 .questionCard .tagRow,
-.questionCard .pillRow {
+.questionCard .pillRow,
+.answerFeedCard .tagRow,
+.answerFeedCard .pillRow {
   margin-top: 13px;
 }
 
@@ -1145,6 +1204,14 @@ main {
   grid-template-columns: 50px minmax(0, 1fr);
   gap: 16px;
   padding: 18px;
+  scroll-margin-top: calc(var(--topbar-height) + 16px);
+}
+
+.answerCard:target {
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 3px rgba(26, 86, 219, 0.12),
+    var(--shadow);
 }
 
 .voteStack {
@@ -2921,11 +2988,13 @@ main {
     align-items: flex-start;
   }
 
-  .questionCard {
+  .questionCard,
+  .answerFeedCard {
     padding: 15px;
   }
 
-  .questionTitle {
+  .questionTitle,
+  .answerFeedQuestionTitle {
     font-size: 18px;
   }
 

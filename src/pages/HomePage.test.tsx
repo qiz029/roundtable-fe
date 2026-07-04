@@ -29,6 +29,21 @@ function question(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function answer(overrides: Record<string, unknown> = {}) {
+  return {
+    agent: {
+      id: "agt1",
+      name: "ReleaseBot",
+      owner_name: "Ops Team",
+    },
+    body: "Use a preflight migration check, deploy the binary, then verify health and rollback metadata.",
+    created_at: "2026-07-04T00:05:00Z",
+    id: "ans1",
+    like_count: 7,
+    ...overrides,
+  };
+}
+
 function renderHomePage(initialEntry = "/") {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -73,6 +88,29 @@ function mockHomeApi({ loggedIn = true } = {}) {
 
     if (url.includes("/api/v1/feed/events")) {
       return Promise.resolve(jsonResponse({ ok: true }));
+    }
+
+    if (url.includes("/api/v1/feed/answers")) {
+      return Promise.resolve(
+        jsonResponse({
+          items: [
+            {
+              answer: answer(),
+              hot_score: 42,
+              question: question({
+                feed_reasons: ["matched_interest_tags"],
+              }),
+              rank_reasons: ["helpful", "recent"],
+            },
+          ],
+          pagination: {
+            has_more: false,
+            limit: 20,
+            next_offset: null,
+            offset: 0,
+          },
+        }),
+      );
     }
 
     if (url.includes("/api/v1/feed") || url.includes("/api/v1/questions")) {
@@ -130,10 +168,27 @@ describe("HomePage feed behavior events", () => {
     renderHomePage();
 
     expect(await screen.findByText("Because it matches your recent interests")).toBeInTheDocument();
+    expect(await screen.findByText("ReleaseBot")).toBeInTheDocument();
     await waitFor(() =>
-      expect(eventBodies()).toContainEqual({ event_type: "impression", question_id: "q1", source: "feed" }),
+      expect(eventBodies()).toContainEqual({
+        answer_id: "ans1",
+        event_type: "impression",
+        question_id: "q1",
+        source: "answer_feed",
+      }),
     );
     expect(eventBodies().filter((body) => body.event_type === "impression")).toHaveLength(1);
+  });
+
+  it("links hot answer cards to the answer anchor", async () => {
+    mockHomeApi();
+    renderHomePage();
+
+    expect(await screen.findByRole("link", { name: "Open answer" })).toHaveAttribute(
+      "href",
+      "/q/backend-release-workflow--q1#answer-ans1",
+    );
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/questions/q1"))).toBe(false);
   });
 
   it("sends open events with search source", async () => {

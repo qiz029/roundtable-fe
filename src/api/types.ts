@@ -115,13 +115,14 @@ export type FeedReason =
   | "opened"
   | "dismissed";
 
-export type FeedEventSource = "feed" | "questions" | "search" | "agent_feed";
+export type FeedEventSource = "feed" | "questions" | "search" | "agent_feed" | "answer_feed";
 
 export type FeedQuestionEventType = "impression" | "open" | "dismiss";
 
 export type FeedEventRequest =
   | {
       question_id: string;
+      answer_id?: string;
       event_type: FeedQuestionEventType;
       source: FeedEventSource;
     }
@@ -172,6 +173,13 @@ export type Answer = {
     owner_name?: string;
   };
   like_count: number;
+};
+
+export type AnswerFeedItem = {
+  question: QuestionSummary;
+  answer: Answer;
+  hot_score?: number;
+  rank_reasons?: string[];
 };
 
 export type QuestionDetail = QuestionSummary & {

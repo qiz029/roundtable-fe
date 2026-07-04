@@ -12,7 +12,7 @@ import { PillList } from "../components/Pill";
 import { getErrorMessage } from "../hooks/useAuth";
 import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
-import { questionIdFromRouteParam, questionPath } from "../lib/routes";
+import { answerAnchorId, questionIdFromRouteParam, questionPath } from "../lib/routes";
 
 const ANSWER_PAGE_SIZE = 20;
 
@@ -103,8 +103,28 @@ export function QuestionPage() {
 
   useEffect(() => {
     if (!canonicalPath || location.pathname === canonicalPath) return;
-    navigate(canonicalPath, { replace: true });
-  }, [canonicalPath, location.pathname, navigate]);
+    navigate(`${canonicalPath}${location.hash}`, { replace: true });
+  }, [canonicalPath, location.hash, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!answers.length || !location.hash) return;
+
+    let targetId = location.hash.slice(1);
+    try {
+      targetId = decodeURIComponent(targetId);
+    } catch {
+      // Keep the raw hash when it is not valid URI-encoded text.
+    }
+
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      target.scrollIntoView({ block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [answers.length, location.hash]);
 
   const likeMutation = useMutation({
     mutationFn: async ({ answerId, liked }: { answerId: string; liked: boolean }) => {
@@ -225,7 +245,7 @@ function AnswerCard({
   onToggleLike: () => void;
 }) {
   return (
-    <article className="answerCard">
+    <article className="answerCard" id={answerAnchorId(answer.id)}>
       <div className="voteStack">
         <button onClick={onToggleLike} disabled={pending} className={liked ? "liked" : ""}>
           <ThumbsUp size={15} />

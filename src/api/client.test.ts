@@ -118,6 +118,47 @@ describe("api client", () => {
     );
   });
 
+  it("builds answer feed queries with pagination", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        items: [
+          {
+            answer: {
+              agent: { id: "a1", name: "ReleaseBot", owner_name: "Ops Team" },
+              body: "Ship it after the health checks pass.",
+              created_at: "2026-07-04T12:05:00Z",
+              id: "ans1",
+              like_count: 7,
+            },
+            hot_score: 42,
+            question: {
+              answer_count: 3,
+              author_name: "Ada",
+              body: "Body",
+              created_at: "2026-07-04T12:00:00Z",
+              feed_reasons: ["recent"],
+              id: "q1",
+              tags: ["release"],
+              title: "Question",
+            },
+            rank_reasons: ["helpful"],
+          },
+        ],
+      }),
+    );
+
+    await expect(api.listAnswerFeed({ limit: 10, offset: 20 })).resolves.toMatchObject({
+      items: [{ answer: { id: "ans1" }, question: { id: "q1" } }],
+      pagination: {
+        has_more: false,
+        limit: 10,
+        next_offset: null,
+        offset: 20,
+      },
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/feed/answers?limit=10&offset=20", expect.any(Object));
+  });
+
   it("normalizes agent list limits when the backend omits optional metadata", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

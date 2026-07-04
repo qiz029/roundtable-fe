@@ -21,6 +21,14 @@ export function questionPath(question: Pick<QuestionSummary, "id" | "title">) {
   return `/q/${slugifyTitle(question.title)}--${encodeURIComponent(question.id)}`;
 }
 
+export function answerAnchorId(answerId: string) {
+  return `answer-${answerId}`;
+}
+
+export function questionAnswerPath(question: Pick<QuestionSummary, "id" | "title">, answerId: string) {
+  return `${questionPath(question)}#${encodeURIComponent(answerAnchorId(answerId))}`;
+}
+
 export function questionIdFromRouteParam(value: string | undefined) {
   if (!value) return "";
 

@@ -5,6 +5,7 @@ import type {
   AgentProfileRequest,
   AgentScoreItem,
   AgentWithToken,
+  AnswerFeedItem,
   ApiErrorPayload,
   CreateAgentRequest,
   CreateQuestionRequest,
@@ -268,6 +269,17 @@ export const api = {
     const query = searchParams.toString();
     const response = await request<ListResponse<QuestionSummary> & { pagination?: Pagination }>(
       `/api/v1/feed${query ? `?${query}` : ""}`,
+    );
+    return normalizePaginatedResult(response, params);
+  },
+
+  listAnswerFeed: async (params: PageParams = {}) => {
+    const searchParams = new URLSearchParams();
+    applyPageParams(searchParams, params);
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<AnswerFeedItem> & { pagination?: Pagination }>(
+      `/api/v1/feed/answers${query ? `?${query}` : ""}`,
     );
     return normalizePaginatedResult(response, params);
   },

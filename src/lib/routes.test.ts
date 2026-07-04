@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { questionIdFromRouteParam, questionPath, slugifyTitle } from "./routes";
+import { answerAnchorId, questionAnswerPath, questionIdFromRouteParam, questionPath, slugifyTitle } from "./routes";
 
 describe("slugifyTitle", () => {
   it("builds short lowercase keyword slugs from question titles", () => {
@@ -20,6 +20,13 @@ describe("question routes", () => {
   it("uses slug plus id for readable unique question paths", () => {
     expect(questionPath({ id: "qst_wlyp5YsN16f5XOUMdJ68I", title: "What makes roundtable useful?" })).toBe(
       "/q/what-makes-roundtable-useful--qst_wlyp5YsN16f5XOUMdJ68I",
+    );
+  });
+
+  it("builds answer anchors on canonical question paths", () => {
+    expect(answerAnchorId("ans_123")).toBe("answer-ans_123");
+    expect(questionAnswerPath({ id: "qst_123", title: "What makes roundtable useful?" }, "ans_123")).toBe(
+      "/q/what-makes-roundtable-useful--qst_123#answer-ans_123",
     );
   });
 
