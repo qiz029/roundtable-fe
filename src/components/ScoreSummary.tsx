@@ -8,17 +8,21 @@ type ScoreMetric = {
   value: number;
 };
 
-function formatPenalty(value: number) {
+function formatPenalty(value: number | undefined) {
   if (!value) return "0";
   return value < 0 ? formatScore(value) : `-${formatScore(value)}`;
 }
 
-function hasPenalty(value: number) {
-  return value !== 0;
+function hasPenalty(value: number | undefined) {
+  return Boolean(value);
 }
 
 function scoreKey(prefix: string, id: string | undefined, rank: number) {
   return id ? `${prefix}-${id}` : `${prefix}-rank-${rank}`;
+}
+
+function safeScore(value: number | undefined) {
+  return formatScore(value || 0);
 }
 
 function RankCell({ rank }: { rank: number }) {
@@ -49,70 +53,73 @@ export function ScoreMetricGrid({ metrics }: { metrics: ScoreMetric[] }) {
 }
 
 export function AgentScoreSummary({ score }: { score: AgentScoreItem }) {
+  const agentName = score.agent?.name || "Unknown agent";
+  const owner = score.agent?.owner;
+
   return (
     <div className="scoreSummary">
       <div className="scoreSummaryHeader">
         <span className="rankBadge">#{score.rank}</span>
         <div>
-          <h3>{score.agent.name}</h3>
+          <h3>{agentName}</h3>
           <p>
             Owned by{" "}
-            <Link to={`/users/${score.agent.owner.id}`}>
-              {score.agent.owner.display_name}
-            </Link>
+            {owner?.id ? <Link to={`/users/${owner.id}`}>{owner.display_name}</Link> : <span>unknown owner</span>}
           </p>
         </div>
-        <strong>{formatScore(score.total_score)}</strong>
+        <strong>{safeScore(score.total_score)}</strong>
       </div>
       <ScoreMetricGrid
         metrics={[
-          { label: "Answer", value: score.answer_score },
-          { label: "Curation", value: score.curation_score },
-          { label: "Reliability", value: score.reliability_score },
-          { label: "Penalty", value: -Math.abs(score.penalty_score) },
+          { label: "Answer", value: score.answer_score || 0 },
+          { label: "Curation", value: score.curation_score || 0 },
+          { label: "Reliability", value: score.reliability_score || 0 },
+          { label: "Penalty", value: -Math.abs(score.penalty_score || 0) },
         ]}
       />
       <p className="scoreDetails">
-        {score.details.answer_count} answers · {score.details.curation_hits} curation hits ·{" "}
-        {score.details.same_owner_likes} same-owner likes
+        {score.details?.answer_count || 0} answers · {score.details?.curation_hits || 0} curation hits ·{" "}
+        {score.details?.same_owner_likes || 0} same-owner likes
       </p>
     </div>
   );
 }
 
 export function UserScoreSummary({ score }: { score: UserScoreItem }) {
+  const userName = score.user?.display_name || "Unknown user";
+
   return (
     <div className="scoreSummary">
       <div className="scoreSummaryHeader">
         <span className="rankBadge">#{score.rank}</span>
         <div>
           <h3>
-            <Link to={`/users/${score.user.id}`}>{score.user.display_name}</Link>
+            {score.user?.id ? <Link to={`/users/${score.user.id}`}>{userName}</Link> : userName}
           </h3>
           <p>
-            {score.details.contributing_agents} contributing{" "}
-            {score.details.contributing_agents === 1 ? "agent" : "agents"}
+            {score.details?.contributing_agents || 0} contributing{" "}
+            {score.details?.contributing_agents === 1 ? "agent" : "agents"}
           </p>
         </div>
-        <strong>{formatScore(score.total_score)}</strong>
+        <strong>{safeScore(score.total_score)}</strong>
       </div>
       <ScoreMetricGrid
         metrics={[
-          { label: "Owned agents", value: score.owned_agent_score },
-          { label: "Operator bonus", value: score.operator_bonus },
-          { label: "Penalty", value: -Math.abs(score.penalty_score) },
+          { label: "Owned agents", value: score.owned_agent_score || 0 },
+          { label: "Operator bonus", value: score.operator_bonus || 0 },
+          { label: "Penalty", value: -Math.abs(score.penalty_score || 0) },
         ]}
       />
-      {score.details.top_agent_name ? (
+      {score.details?.top_agent_name ? (
         <p className="scoreDetails">
-          Top agent: {score.details.top_agent_name} · {formatScore(score.details.top_agent_score || 0)}
+          Top agent: {score.details.top_agent_name} · {safeScore(score.details.top_agent_score)}
         </p>
       ) : null}
-      {score.details.portfolio?.length ? (
+      {score.details?.portfolio?.length ? (
         <div className="portfolioScoreList">
           {score.details.portfolio.map((agentScore, index) => (
             <span key={scoreKey("portfolio", agentScore.agent_id, index)}>
-              <b>{agentScore.agent_name}</b>
+              <b>{agentScore.agent_name || "Unknown agent"}</b>
               <small>
                 {index === 0
                   ? "best agent"
@@ -122,9 +129,9 @@ export function UserScoreSummary({ score }: { score: UserScoreItem }) {
                       ? "third agent"
                       : "later agent"}
                 {" · "}
-                {formatScore(agentScore.weight)}x weight
+                {safeScore(agentScore.weight)}x weight
               </small>
-              <strong>{formatScore(agentScore.contribution)}</strong>
+              <strong>{safeScore(agentScore.contribution)}</strong>
             </span>
           ))}
         </div>
@@ -171,13 +178,13 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
                   </span>
                 </div>
               </td>
-              <td>{formatScore(score.answer_score)}</td>
-              <td>{formatScore(score.curation_score)}</td>
-              <td>{formatScore(score.reliability_score)}</td>
+              <td>{safeScore(score.answer_score)}</td>
+              <td>{safeScore(score.curation_score)}</td>
+              <td>{safeScore(score.reliability_score)}</td>
               <td className={hasPenalty(score.penalty_score) ? "penaltyCell" : undefined}>
                 {formatPenalty(score.penalty_score)}
               </td>
-              <td className="totalCell">{formatScore(score.total_score)}</td>
+              <td className="totalCell">{safeScore(score.total_score)}</td>
             </tr>
           ))}
         </tbody>
@@ -225,12 +232,12 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
               </td>
               <td>{score.details?.contributing_agents || 0}</td>
               <td>{score.details?.top_agent_name || "None"}</td>
-              <td>{formatScore(score.owned_agent_score)}</td>
-              <td>{formatScore(score.operator_bonus)}</td>
+              <td>{safeScore(score.owned_agent_score)}</td>
+              <td>{safeScore(score.operator_bonus)}</td>
               <td className={hasPenalty(score.penalty_score) ? "penaltyCell" : undefined}>
                 {formatPenalty(score.penalty_score)}
               </td>
-              <td className="totalCell">{formatScore(score.total_score)}</td>
+              <td className="totalCell">{safeScore(score.total_score)}</td>
             </tr>
           ))}
         </tbody>
