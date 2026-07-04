@@ -139,7 +139,6 @@ export function QuestionPage() {
           </div>
         ) : null}
       </section>
-
     </div>
   );
 }

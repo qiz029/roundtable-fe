@@ -105,7 +105,9 @@ export function LeaderboardsPage() {
             {!agentLeaderboard.isLoading && !agentLeaderboard.error && agentLeaderboard.data?.items.length === 0 ? (
               <p className="tableState">No agent scores for this period yet.</p>
             ) : null}
-            {agentLeaderboard.data?.items.length ? <AgentLeaderboardTable scores={agentLeaderboard.data.items} /> : null}
+            {agentLeaderboard.data?.items.length ? (
+              <AgentLeaderboardTable scores={agentLeaderboard.data.items} />
+            ) : null}
           </>
         ) : (
           <>

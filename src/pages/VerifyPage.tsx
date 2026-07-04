@@ -17,6 +17,7 @@ export function VerifyPage() {
       await queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
+  const { mutate: verifyToken } = verify;
 
   useEffect(() => {
     if (!queryToken || autoSubmittedToken.current === queryToken) {
@@ -25,8 +26,8 @@ export function VerifyPage() {
 
     autoSubmittedToken.current = queryToken;
     setToken(queryToken);
-    verify.mutate(queryToken);
-  }, [queryToken]);
+    verifyToken(queryToken);
+  }, [queryToken, verifyToken]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,8 +43,8 @@ export function VerifyPage() {
           <span className="eyebrow">Email verification</span>
           <h1>{queryToken ? "Verifying your email." : "Verify your email."}</h1>
           <p>
-            Open the verification link from your email, or paste the token printed by the backend
-            log mailer in local development.
+            Open the verification link from your email, or paste the token printed by the backend log mailer in local
+            development.
           </p>
         </div>
 

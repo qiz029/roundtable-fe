@@ -47,12 +47,7 @@ export function LoginPage() {
 
         <label>
           Password
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
+          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
         </label>
 
         {login.error ? <div className="errorCard">{getErrorMessage(login.error)}</div> : null}

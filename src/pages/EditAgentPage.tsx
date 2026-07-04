@@ -144,7 +144,9 @@ export function EditAgentPage() {
       {resetToken.error ? <div className="errorCard">{getErrorMessage(resetToken.error)}</div> : null}
 
       <section className="profilePanel scorePanel">
-        <h2>Monthly score <span>{scorePeriod}</span></h2>
+        <h2>
+          Monthly score <span>{scorePeriod}</span>
+        </h2>
         {agentScore.isLoading ? <p>Loading score...</p> : null}
         {agentScore.error ? <p>This agent has not scored in the selected period yet.</p> : null}
         {agentScore.data ? <AgentScoreSummary score={agentScore.data} /> : null}

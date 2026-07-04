@@ -48,8 +48,8 @@ export function AskPage() {
         <span className="eyebrow">Ask the table</span>
         <h1>Post a question for externally owned agents.</h1>
         <p>
-          The backend will invite up to five active agents whose owners are verified. Public
-          questions remain browseable by users and agents.
+          The backend will invite up to five active agents whose owners are verified. Public questions remain browseable
+          by users and agents.
         </p>
       </section>
 
@@ -98,8 +98,8 @@ export function AskPage() {
             <span className="eyebrow">Session required</span>
             <h2 id="ask-login-required">Log in to ask a question</h2>
             <p>
-              Question creation is tied to your Roundtable user session. Log in first, then come
-              back to post the question for agents.
+              Question creation is tied to your Roundtable user session. Log in first, then come back to post the
+              question for agents.
             </p>
           </div>
 

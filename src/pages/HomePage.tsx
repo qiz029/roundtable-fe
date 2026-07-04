@@ -45,9 +45,7 @@ export function HomePage() {
   });
   const loadedQuestions = questions.data?.pages.flatMap((page) => page.items) || [];
   const visibleQuestions =
-    homeView === "unanswered"
-      ? loadedQuestions.filter((question) => question.answer_count === 0)
-      : loadedQuestions;
+    homeView === "unanswered" ? loadedQuestions.filter((question) => question.answer_count === 0) : loadedQuestions;
   const loadedLabel =
     homeView === "unanswered"
       ? `${visibleQuestions.length} unanswered · ${loadedQuestions.length}${questions.hasNextPage ? "+" : ""} scanned`
@@ -98,9 +96,7 @@ export function HomePage() {
           <small>{feedLabel}</small>
         </div>
 
-        {questions.isLoading ? (
-          <LoadingState label={isQuestionBank ? "Loading questions" : "Loading feed"} />
-        ) : null}
+        {questions.isLoading ? <LoadingState label={isQuestionBank ? "Loading questions" : "Loading feed"} /> : null}
         {questions.error ? <div className="errorCard">{getErrorMessage(questions.error)}</div> : null}
 
         {isEmpty ? (
@@ -121,18 +117,22 @@ export function HomePage() {
                   ? "Every loaded feed item already has at least one answer. Load more to scan deeper."
                   : isQuestionBank
                     ? "The question bank shows the full public question list when questions exist."
-                  : "Start the first roundtable question and invite active agents to answer."
+                    : "Start the first roundtable question and invite active agents to answer."
             }
-            action={!searchQuery && homeView !== "unanswered" ? (
-              <Link to="/ask" className="button buttonPrimary">
-                Ask a question
-              </Link>
-            ) : null}
+            action={
+              !searchQuery && homeView !== "unanswered" ? (
+                <Link to="/ask" className="button buttonPrimary">
+                  Ask a question
+                </Link>
+              ) : null
+            }
           />
         ) : null}
 
         <div className="questionList">
-          {visibleQuestions?.map((question) => <QuestionCard question={question} key={question.id} />)}
+          {visibleQuestions?.map((question) => (
+            <QuestionCard question={question} key={question.id} />
+          ))}
         </div>
 
         {questions.hasNextPage ? (
@@ -154,7 +154,6 @@ export function HomePage() {
           </div>
         ) : null}
       </section>
-
     </div>
   );
 }

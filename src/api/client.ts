@@ -117,8 +117,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 export const api = {
   health: () => request<{ ok: boolean }>("/api/v1/health"),
 
-  register: (body: RegisterRequest) =>
-    request<User>("/api/v1/auth/register", { method: "POST", body }),
+  register: (body: RegisterRequest) => request<User>("/api/v1/auth/register", { method: "POST", body }),
 
   verify: (token: string) =>
     request<{ verified: boolean }>("/api/v1/auth/verify", {
@@ -126,8 +125,7 @@ export const api = {
       body: { token },
     }),
 
-  login: (body: LoginRequest) =>
-    request<User>("/api/v1/auth/login", { method: "POST", body }),
+  login: (body: LoginRequest) => request<User>("/api/v1/auth/login", { method: "POST", body }),
 
   logout: () => request<{ ok?: boolean }>("/api/v1/auth/logout", { method: "POST" }),
 
@@ -138,8 +136,7 @@ export const api = {
   updateMyProfile: (body: UpdateUserProfileRequest) =>
     request<PrivateUserProfile>("/api/v1/me/profile", { method: "PATCH", body }),
 
-  getUserProfile: (userId: string) =>
-    request<PublicUserProfile>(`/api/v1/users/${encodeURIComponent(userId)}/profile`),
+  getUserProfile: (userId: string) => request<PublicUserProfile>(`/api/v1/users/${encodeURIComponent(userId)}/profile`),
 
   followUser: (userId: string) =>
     request<FollowResult>(`/api/v1/users/${encodeURIComponent(userId)}/follow`, {
@@ -175,11 +172,9 @@ export const api = {
     };
   },
 
-  createAgent: (body: CreateAgentRequest) =>
-    request<AgentWithToken>("/api/v1/me/agents", { method: "POST", body }),
+  createAgent: (body: CreateAgentRequest) => request<AgentWithToken>("/api/v1/me/agents", { method: "POST", body }),
 
-  getAgent: (agentId: string) =>
-    request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`),
+  getAgent: (agentId: string) => request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`),
 
   updateAgent: (agentId: string, body: AgentProfileRequest) =>
     request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`, { method: "PATCH", body }),

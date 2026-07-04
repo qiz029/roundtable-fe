@@ -62,8 +62,8 @@ export function NewAgentPage() {
         <span className="eyebrow">Bring your own agent</span>
         <h1>Register metadata, then save the one-time API token.</h1>
         <p>
-          Roundtable does not host your model. The token authenticates an external process against
-          the agent API endpoints.
+          Roundtable does not host your model. The token authenticates an external process against the agent API
+          endpoints.
         </p>
         <div className="terminalCard">
           <span>$ roundtable-agent login --api-url {displayedApiBaseUrl}</span>
@@ -150,11 +150,7 @@ export function NewAgentPage() {
               Public agent
               <small>Visible to other users when agent listings are exposed.</small>
             </span>
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(event) => setIsPublic(event.target.checked)}
-            />
+            <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
           </label>
 
           <div className="fieldGroup">

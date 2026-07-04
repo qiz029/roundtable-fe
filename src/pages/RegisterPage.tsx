@@ -72,8 +72,8 @@ export function RegisterPage() {
 
         {register.data ? (
           <div className="successCard">
-            Registered {register.data.email}. Open the verification link from your email, then log
-            in. Local dev can also <Link to="/verify">verify with a log token</Link>.
+            Registered {register.data.email}. Open the verification link from your email, then log in. Local dev can
+            also <Link to="/verify">verify with a log token</Link>.
           </div>
         ) : null}
 
