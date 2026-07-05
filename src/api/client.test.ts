@@ -232,6 +232,93 @@ describe("api client", () => {
     );
   });
 
+  it("builds answer response list, create, and update requests", async () => {
+    const response = {
+      agent: {
+        id: "agt1",
+        name: "CounterBot",
+        owner_name: "Ops Team",
+      },
+      answer_id: "ans 1",
+      body: "Clarify the deployment window.",
+      created_at: "2026-07-04T12:10:00Z",
+      id: "rsp1",
+      stance: "clarify",
+      updated_at: "2026-07-04T12:10:00Z",
+    };
+
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          items: [response],
+          pagination: {
+            has_more: false,
+            limit: 5,
+            next_offset: null,
+            offset: 10,
+          },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse(response, { status: 201, statusText: "Created" }))
+      .mockResolvedValueOnce(jsonResponse({ ...response, body: "Updated clarification.", stance: "extend" }));
+
+    await expect(api.listAnswerResponses("ans 1", { limit: 5, offset: 10 })).resolves.toMatchObject({
+      items: [{ id: "rsp1" }],
+      pagination: {
+        has_more: false,
+        limit: 5,
+        next_offset: null,
+        offset: 10,
+      },
+    });
+    await expect(
+      api.createAnswerResponse("ans 1", {
+        agent_id: "agt1",
+        body: "Clarify the deployment window.",
+        stance: "clarify",
+      }),
+    ).resolves.toMatchObject({ id: "rsp1" });
+    await expect(
+      api.updateAnswerResponse("rsp1", {
+        body: "Updated clarification.",
+        stance: "extend",
+      }),
+    ).resolves.toMatchObject({ body: "Updated clarification.", stance: "extend" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/v1/answers/ans%201/responses?limit=5&offset=10",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/agent/answers/ans%201/responses",
+      expect.objectContaining({
+        body: JSON.stringify({
+          agent_id: "agt1",
+          body: "Clarify the deployment window.",
+          stance: "clarify",
+        }),
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/v1/agent/responses/rsp1",
+      expect.objectContaining({
+        body: JSON.stringify({
+          body: "Updated clarification.",
+          stance: "extend",
+        }),
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      }),
+    );
+  });
+
   it("normalizes agent list limits when the backend omits optional metadata", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

@@ -93,6 +93,35 @@ function questionDetail() {
   };
 }
 
+function ownedAgent() {
+  return {
+    capabilities: [],
+    description: "Checks release reasoning.",
+    id: "agt-owned",
+    is_public: true,
+    name: "CounterBot",
+    status: "active",
+    tags: ["release"],
+  };
+}
+
+function answerResponse(overrides: Record<string, unknown> = {}) {
+  return {
+    agent: {
+      id: "agt-owned",
+      name: "CounterBot",
+      owner_name: "Todd",
+    },
+    answer_id: "ans1",
+    body: "This misses the post-deploy verification window.",
+    created_at: "2026-07-04T12:14:00Z",
+    id: "rsp1",
+    stance: "disagree",
+    updated_at: "2026-07-04T12:14:00Z",
+    ...overrides,
+  };
+}
+
 function existingComment() {
   return {
     answer_id: "ans1",
@@ -106,7 +135,7 @@ function existingComment() {
   };
 }
 
-function mockQuestionApi() {
+function mockQuestionApi({ responsesByAnswerId = {} }: { responsesByAnswerId?: Record<string, unknown[]> } = {}) {
   fetchMock.mockImplementation((input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
 
@@ -121,8 +150,61 @@ function mockQuestionApi() {
       );
     }
 
+    if (url.includes("/api/v1/me/agents")) {
+      return Promise.resolve(
+        jsonResponse({
+          active_count: 1,
+          agent_limit: 3,
+          items: [ownedAgent()],
+        }),
+      );
+    }
+
     if (url.includes("/api/v1/questions/q1")) {
       return Promise.resolve(jsonResponse(questionDetail()));
+    }
+
+    if (url.includes("/api/v1/agent/answers/ans1/responses") && init?.method === "POST") {
+      const body = JSON.parse(String(init.body));
+      return Promise.resolve(
+        jsonResponse(
+          answerResponse({
+            body: body.body,
+            id: "rsp-new",
+            stance: body.stance,
+            updated_at: "2026-07-04T12:18:00Z",
+          }),
+          { status: 201, statusText: "Created" },
+        ),
+      );
+    }
+
+    if (url.includes("/api/v1/agent/responses/rsp1") && init?.method === "PATCH") {
+      const body = JSON.parse(String(init.body));
+      return Promise.resolve(
+        jsonResponse(
+          answerResponse({
+            body: body.body,
+            stance: body.stance,
+            updated_at: "2026-07-04T12:20:00Z",
+          }),
+        ),
+      );
+    }
+
+    if (url.includes("/api/v1/answers/") && url.includes("/responses")) {
+      const answerId = decodeURIComponent(url.split("/api/v1/answers/")[1].split("/responses")[0]);
+      return Promise.resolve(
+        jsonResponse({
+          items: responsesByAnswerId[answerId] || [],
+          pagination: {
+            has_more: false,
+            limit: 10,
+            next_offset: null,
+            offset: 0,
+          },
+        }),
+      );
     }
 
     if (url.includes("/api/v1/answers/ans1/comments") && init?.method === "POST") {
@@ -170,6 +252,18 @@ function mockQuestionApi() {
 function commentPostBodies() {
   return fetchMock.mock.calls
     .filter(([url, init]) => String(url).includes("/api/v1/answers/ans1/comments") && init?.method === "POST")
+    .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+}
+
+function responsePostBodies() {
+  return fetchMock.mock.calls
+    .filter(([url, init]) => String(url).includes("/api/v1/agent/answers/ans1/responses") && init?.method === "POST")
+    .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+}
+
+function responsePatchBodies() {
+  return fetchMock.mock.calls
+    .filter(([url, init]) => String(url).includes("/api/v1/agent/responses/rsp1") && init?.method === "PATCH")
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 }
 
@@ -255,5 +349,67 @@ describe("QuestionPage answer comments", () => {
     );
     expect(await screen.findByText("@Ada Lovelace Check health and rollback metadata.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "2 comments" })).toBeInTheDocument();
+  });
+});
+
+describe("QuestionPage agent responses", () => {
+  beforeEach(() => {
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("shows bounded agent responses and creates one from an owned agent", async () => {
+    const user = userEvent.setup();
+    mockQuestionApi();
+    renderQuestionPage();
+
+    expect((await screen.findAllByText("Agent responses"))[0]).toBeInTheDocument();
+    expect((await screen.findAllByText("No agent responses yet."))[0]).toBeInTheDocument();
+
+    const responseDraft = (await screen.findAllByLabelText("Agent response"))[0];
+    await user.type(responseDraft, "This needs a rollback checkpoint.");
+    await user.selectOptions(screen.getAllByLabelText("Response stance")[0], "extend");
+    await user.click(screen.getAllByRole("button", { name: "Post response" })[0]);
+
+    await waitFor(() =>
+      expect(responsePostBodies()).toContainEqual({
+        agent_id: "agt-owned",
+        body: "This needs a rollback checkpoint.",
+        stance: "extend",
+      }),
+    );
+    expect((await screen.findAllByText("This needs a rollback checkpoint."))[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Extend")[0]).toBeInTheDocument();
+  });
+
+  it("edits an existing response for the selected agent instead of appending another one", async () => {
+    const user = userEvent.setup();
+    mockQuestionApi({ responsesByAnswerId: { ans1: [answerResponse()] } });
+    renderQuestionPage();
+
+    expect(await screen.findByText("This misses the post-deploy verification window.")).toBeInTheDocument();
+    expect(screen.getAllByText("Disagree")[0]).toBeInTheDocument();
+
+    const responseDraft = (await screen.findAllByLabelText("Agent response"))[0];
+    await waitFor(() => expect(responseDraft).toHaveValue("This misses the post-deploy verification window."));
+    await user.clear(responseDraft);
+    await user.type(responseDraft, "Clarify the rollback checkpoint before deploy.");
+    await user.selectOptions(screen.getAllByLabelText("Response stance")[0], "clarify");
+    await user.click(screen.getAllByRole("button", { name: "Update response" })[0]);
+
+    await waitFor(() =>
+      expect(responsePatchBodies()).toContainEqual({
+        body: "Clarify the rollback checkpoint before deploy.",
+        stance: "clarify",
+      }),
+    );
+    expect(responsePostBodies()).toHaveLength(0);
+    expect((await screen.findAllByText("Clarify the rollback checkpoint before deploy."))[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Clarify")[0]).toBeInTheDocument();
   });
 });

@@ -7,8 +7,10 @@ import type {
   AgentWithToken,
   AnswerComment,
   AnswerFeedItem,
+  AnswerResponse,
   ApiErrorPayload,
   CreateAnswerCommentRequest,
+  CreateAnswerResponseRequest,
   CreateAgentRequest,
   CreateQuestionRequest,
   DeleteAnswerCommentResult,
@@ -26,6 +28,7 @@ import type {
   QuestionSummary,
   RegisterRequest,
   TokenResetResponse,
+  UpdateAnswerResponseRequest,
   UpdateUserProfileRequest,
   User,
   UserScoreItem,
@@ -325,6 +328,29 @@ export const api = {
   createAnswerComment: (answerId: string, body: CreateAnswerCommentRequest) =>
     request<AnswerComment>(`/api/v1/answers/${encodeURIComponent(answerId)}/comments`, {
       method: "POST",
+      body,
+    }),
+
+  listAnswerResponses: async (answerId: string, params: PageParams = {}) => {
+    const searchParams = new URLSearchParams();
+    applyPageParams(searchParams, params);
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<AnswerResponse> & { pagination?: Pagination }>(
+      `/api/v1/answers/${encodeURIComponent(answerId)}/responses${query ? `?${query}` : ""}`,
+    );
+    return normalizePaginatedResult(response, params);
+  },
+
+  createAnswerResponse: (answerId: string, body: CreateAnswerResponseRequest) =>
+    request<AnswerResponse>(`/api/v1/agent/answers/${encodeURIComponent(answerId)}/responses`, {
+      method: "POST",
+      body,
+    }),
+
+  updateAnswerResponse: (responseId: string, body: UpdateAnswerResponseRequest) =>
+    request<AnswerResponse>(`/api/v1/agent/responses/${encodeURIComponent(responseId)}`, {
+      method: "PATCH",
       body,
     }),
 

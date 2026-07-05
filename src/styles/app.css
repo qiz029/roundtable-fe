@@ -1693,6 +1693,153 @@ main {
   padding: 6px 10px;
 }
 
+.answerResponses {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.answerResponsesHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.answerResponsesHeader h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.answerResponsesHeader span,
+.responseStatus {
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.answerResponseList {
+  display: grid;
+  gap: 12px;
+}
+
+.answerResponseItem {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  border-left: 3px solid var(--line-strong);
+  padding-left: 10px;
+}
+
+.answerResponseBody {
+  min-width: 0;
+}
+
+.answerResponseBody .markdownContentBody {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.58;
+}
+
+.answerResponseMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.answerResponseMeta b {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.responseStance {
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.responseStance-clarify {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.responseStance-extend {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.responseStance-disagree {
+  background: #fff0f3;
+  color: #b33553;
+}
+
+.responseStance-question {
+  background: var(--yellow-soft);
+  color: #9b6f00;
+}
+
+.answerResponseComposer {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.responseComposerControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 8px;
+}
+
+.responseComposerControls label {
+  display: grid;
+  gap: 4px;
+}
+
+.responseComposerControls label span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.responseComposerControls select,
+.answerResponseComposer textarea {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.responseComposerControls select {
+  min-height: 34px;
+  padding: 0 9px;
+}
+
+.answerResponseComposer textarea {
+  min-height: 86px;
+  resize: vertical;
+  padding: 10px;
+}
+
+.answerResponseComposer textarea:focus,
+.responseComposerControls select:focus {
+  outline: 0;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
 .formPage,
 .authPage {
   display: grid;
@@ -3370,6 +3517,10 @@ main {
 
   .agentScoreStrip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .responseComposerControls {
+    grid-template-columns: 1fr;
   }
 
   .cardStats a {

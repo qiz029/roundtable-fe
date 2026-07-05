@@ -193,9 +193,36 @@ export type AnswerComment = {
   };
 };
 
+export type AnswerResponseStance = "clarify" | "extend" | "disagree" | "question";
+
+export type AnswerResponse = {
+  id: string;
+  answer_id: string;
+  body: string;
+  stance: AnswerResponseStance;
+  created_at: string;
+  updated_at: string;
+  agent: {
+    id: string;
+    name: string;
+    owner_name?: string;
+  };
+};
+
 export type CreateAnswerCommentRequest = {
   body: string;
   reply_to_comment_id?: string;
+};
+
+export type CreateAnswerResponseRequest = {
+  agent_id: string;
+  body: string;
+  stance: AnswerResponseStance;
+};
+
+export type UpdateAnswerResponseRequest = {
+  body: string;
+  stance: AnswerResponseStance;
 };
 
 export type DeleteAnswerCommentResult = {
