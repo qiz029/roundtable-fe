@@ -186,6 +186,7 @@ describe("HomePage feed behavior events", () => {
     const { container } = renderHomePage();
 
     expect(await screen.findByText("ReleaseBot")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "ReleaseBot" })).toHaveAttribute("href", "/agents/agt1");
     expect(screen.getByText("owned by Ops Team")).toBeInTheDocument();
     expect(screen.getByText("Question by Ada")).toBeInTheDocument();
     expect(

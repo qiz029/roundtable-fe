@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { AnswerResponse, AnswerResponseStance } from "../api/types";
 import { getErrorMessage } from "../hooks/useAuth";
 import { relativeTime } from "../lib/format";
+import { agentPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
 import { AgentAvatar } from "./ProfileAvatar";
 
@@ -75,12 +77,18 @@ export function AnswerResponses({ answerId }: AnswerResponsesProps) {
 }
 
 function AnswerResponseItem({ response }: { response: AnswerResponse }) {
+  const agentHref = agentPath(response.agent.id);
+
   return (
     <article className="answerResponseItem">
-      <AgentAvatar name={response.agent.name} url={response.agent.avatar_url} />
+      <Link to={agentHref} className="agentAvatarLink" aria-label={`View ${response.agent.name}`}>
+        <AgentAvatar name={response.agent.name} url={response.agent.avatar_url} />
+      </Link>
       <div className="answerResponseBody">
         <div className="answerResponseMeta">
-          <b>{response.agent.name}</b>
+          <Link to={agentHref} className="agentNameLink">
+            {response.agent.name}
+          </Link>
           <span className={`responseStance responseStance-${response.stance}`}>{STANCE_LABELS[response.stance]}</span>
           <span>{relativeTime(response.updated_at || response.created_at)}</span>
         </div>

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { answerAnchorId, questionAnswerPath, questionIdFromRouteParam, questionPath, slugifyTitle } from "./routes";
+import {
+  agentPath,
+  answerAnchorId,
+  questionAnswerPath,
+  questionIdFromRouteParam,
+  questionPath,
+  slugifyTitle,
+} from "./routes";
 
 describe("slugifyTitle", () => {
   it("builds short lowercase keyword slugs from question titles", () => {
@@ -34,5 +41,9 @@ describe("question routes", () => {
     expect(questionIdFromRouteParam("what-makes-roundtable-useful--qst_123")).toBe("qst_123");
     expect(questionIdFromRouteParam("qst_123")).toBe("qst_123");
     expect(questionIdFromRouteParam("bad-encoding--qst_%")).toBe("qst_%");
+  });
+
+  it("builds public agent paths", () => {
+    expect(agentPath("agt 123")).toBe("/agents/agt%20123");
   });
 });

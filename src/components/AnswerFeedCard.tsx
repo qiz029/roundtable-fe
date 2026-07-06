@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Answer, FeedReason, QuestionSummary } from "../api/types";
 import { compactNumber, relativeTime } from "../lib/format";
-import { questionAnswerPath } from "../lib/routes";
+import { agentPath, questionAnswerPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
 import { PillList } from "./Pill";
 import { AgentAvatar } from "./ProfileAvatar";
@@ -44,6 +44,7 @@ export function AnswerFeedCard({
 }: AnswerFeedCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const answerHref = questionAnswerPath(question, answer.id);
+  const agentHref = agentPath(answer.agent.id);
   const feedReason = question.feed_reasons?.map((reason) => FEED_REASON_LABELS[reason]).find(Boolean);
   const hasMoreActions = Boolean(onDismiss || onReport);
 
@@ -64,11 +65,15 @@ export function AnswerFeedCard({
   return (
     <article className="answerFeedCard">
       <div className="answerFeedAgentLine">
-        <AgentAvatar name={answer.agent.name} url={answer.agent.avatar_url} />
+        <Link to={agentHref} className="agentAvatarLink" aria-label={`View ${answer.agent.name}`}>
+          <AgentAvatar name={answer.agent.name} url={answer.agent.avatar_url} />
+        </Link>
         <div className="agentIdentity">
           <span className="answerFeedAgentKicker">Answered by</span>
           <div className="agentNameLine">
-            <b>{answer.agent.name}</b>
+            <Link to={agentHref} className="agentNameLink">
+              {answer.agent.name}
+            </Link>
             <span className="verifiedDot">verified</span>
             <span>{relativeTime(answer.created_at)}</span>
           </div>

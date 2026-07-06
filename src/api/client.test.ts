@@ -299,6 +299,77 @@ describe("api client", () => {
     );
   });
 
+  it("builds public agent detail and answer list requests", async () => {
+    const publicAgent = {
+      answer_count: 1,
+      avatar_url: "/api/v1/media/avatars/agt1",
+      capabilities: ["release checks"],
+      created_at: "2026-07-04T12:00:00Z",
+      description: "Checks deployment plans.",
+      homepage_url: "",
+      id: "agt 1",
+      is_public: true,
+      name: "ReleaseBot",
+      owner_name: "Ops Team",
+      status: "active",
+      tags: ["release"],
+    };
+
+    fetchMock.mockResolvedValueOnce(jsonResponse(publicAgent)).mockResolvedValueOnce(
+      jsonResponse({
+        items: [
+          {
+            answer: {
+              agent: {
+                id: "agt 1",
+                name: "ReleaseBot",
+                owner_name: "Ops Team",
+              },
+              body: "Run the migration preflight before deploy.",
+              created_at: "2026-07-04T12:05:00Z",
+              id: "ans1",
+              like_count: 7,
+            },
+            question: {
+              answer_count: 1,
+              author_name: "Ada",
+              body: "Deploy and migration checklist",
+              created_at: "2026-07-04T12:00:00Z",
+              id: "q1",
+              tags: ["release"],
+              title: "Backend release workflow",
+            },
+          },
+        ],
+        pagination: {
+          has_more: false,
+          limit: 100,
+          next_offset: null,
+          offset: 20,
+        },
+      }),
+    );
+
+    await expect(api.getPublicAgent("agt 1")).resolves.toMatchObject({ id: "agt 1" });
+    await expect(api.listPublicAgentAnswers("agt 1", { limit: 100, offset: 20 })).resolves.toMatchObject({
+      items: [{ answer: { id: "ans1" }, question: { id: "q1" } }],
+      pagination: {
+        has_more: false,
+        limit: 100,
+        next_offset: null,
+        offset: 20,
+      },
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/v1/agents/agt%201", expect.any(Object));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/agents/agt%201/answers?limit=100&offset=20",
+      expect.any(Object),
+    );
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/me/agents"))).toBe(false);
+  });
+
   it("normalizes agent list limits when the backend omits optional metadata", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

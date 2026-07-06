@@ -2,6 +2,7 @@ import { Medal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { AgentScoreItem, UserScoreItem } from "../api/types";
 import { formatScore, formatScoreSafe } from "../lib/format";
+import { agentPath } from "../lib/routes";
 import { AgentAvatar, ProfileAvatar } from "./ProfileAvatar";
 
 type ScoreMetric = {
@@ -49,13 +50,14 @@ export function ScoreMetricGrid({ metrics }: { metrics: ScoreMetric[] }) {
 export function AgentScoreSummary({ score }: { score: AgentScoreItem }) {
   const agentName = score.agent?.name || "Unknown agent";
   const owner = score.agent?.owner;
+  const publicAgentPath = score.agent?.id ? agentPath(score.agent.id) : "";
 
   return (
     <div className="scoreSummary">
       <div className="scoreSummaryHeader">
         <span className="rankBadge">#{score.rank}</span>
         <div>
-          <h3>{agentName}</h3>
+          <h3>{publicAgentPath ? <Link to={publicAgentPath}>{agentName}</Link> : agentName}</h3>
           <p>
             Owned by{" "}
             {owner?.id ? <Link to={`/users/${owner.id}`}>{owner.display_name}</Link> : <span>unknown owner</span>}
@@ -106,14 +108,26 @@ export function UserScoreSummary({ score, showPenalty = true }: { score: UserSco
       <ScoreMetricGrid metrics={metrics} />
       {score.details?.top_agent_name ? (
         <p className="scoreDetails">
-          Top agent: {score.details.top_agent_name} · {safeScore(score.details.top_agent_score)}
+          Top agent:{" "}
+          {score.details.top_agent_id ? (
+            <Link to={agentPath(score.details.top_agent_id)}>{score.details.top_agent_name}</Link>
+          ) : (
+            score.details.top_agent_name
+          )}{" "}
+          · {safeScore(score.details.top_agent_score)}
         </p>
       ) : null}
       {score.details?.portfolio?.length ? (
         <div className="portfolioScoreList">
           {score.details.portfolio.map((agentScore, index) => (
             <span key={scoreKey("portfolio", agentScore.agent_id, index)}>
-              <b>{agentScore.agent_name || "Unknown agent"}</b>
+              <b>
+                {agentScore.agent_id ? (
+                  <Link to={agentPath(agentScore.agent_id)}>{agentScore.agent_name || "Unknown agent"}</Link>
+                ) : (
+                  agentScore.agent_name || "Unknown agent"
+                )}
+              </b>
               <small>
                 {index === 0
                   ? "best agent"
@@ -156,9 +170,25 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
               </td>
               <td>
                 <div className="scoreIdentity">
-                  <AgentAvatar name={score.agent?.name || "Agent"} url={score.agent?.avatar_url} />
+                  {score.agent?.id ? (
+                    <Link
+                      to={agentPath(score.agent.id)}
+                      className="agentAvatarLink"
+                      aria-label={`View ${score.agent.name}`}
+                    >
+                      <AgentAvatar name={score.agent.name || "Agent"} url={score.agent.avatar_url} />
+                    </Link>
+                  ) : (
+                    <AgentAvatar name={score.agent?.name || "Agent"} url={score.agent?.avatar_url} />
+                  )}
                   <span>
-                    <b>{score.agent?.name || "Unknown agent"}</b>
+                    <b>
+                      {score.agent?.id ? (
+                        <Link to={agentPath(score.agent.id)}>{score.agent.name || "Unknown agent"}</Link>
+                      ) : (
+                        score.agent?.name || "Unknown agent"
+                      )}
+                    </b>
                     <small>
                       {score.agent?.owner?.id ? (
                         <Link to={`/users/${score.agent.owner.id}`}>@{score.agent.owner.display_name}</Link>
@@ -220,7 +250,13 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
                 </div>
               </td>
               <td>{score.details?.contributing_agents || 0}</td>
-              <td>{score.details?.top_agent_name || "None"}</td>
+              <td>
+                {score.details?.top_agent_id && score.details?.top_agent_name ? (
+                  <Link to={agentPath(score.details.top_agent_id)}>{score.details.top_agent_name}</Link>
+                ) : (
+                  score.details?.top_agent_name || "None"
+                )}
+              </td>
               <td>{safeScore(score.owned_agent_score)}</td>
               <td>{safeScore(score.operator_bonus)}</td>
               <td className="totalCell">{safeScore(score.total_score)}</td>

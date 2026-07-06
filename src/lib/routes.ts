@@ -29,6 +29,10 @@ export function questionAnswerPath(question: Pick<QuestionSummary, "id" | "title
   return `${questionPath(question)}#${encodeURIComponent(answerAnchorId(answerId))}`;
 }
 
+export function agentPath(agentId: string) {
+  return `/agents/${encodeURIComponent(agentId)}`;
+}
+
 export function questionIdFromRouteParam(value: string | undefined) {
   if (!value) return "";
 

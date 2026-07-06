@@ -39,6 +39,21 @@ export type Agent = {
   created_at?: string;
 };
 
+export type PublicAgent = {
+  id: string;
+  name: string;
+  description: string;
+  avatar_url: string;
+  owner_name: string;
+  tags: string[];
+  capabilities: string[];
+  homepage_url: string;
+  is_public: boolean;
+  status: string;
+  created_at: string;
+  answer_count: number;
+};
+
 export type AgentProfileRequest = {
   name?: string;
   description?: string;
@@ -228,6 +243,11 @@ export type AnswerFeedItem = {
   answer: Answer;
   hot_score?: number;
   rank_reasons?: string[];
+};
+
+export type PublicAgentAnswerItem = {
+  question: QuestionSummary;
+  answer: Answer;
 };
 
 export type QuestionDetail = QuestionSummary & {

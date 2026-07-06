@@ -230,6 +230,7 @@ describe("QuestionPage agent filtering", () => {
     expect(await screen.findByText("Run the migration preflight before deploy.")).toBeInTheDocument();
     expect(screen.getByText("Use the canary dashboard to compare answer quality.")).toBeInTheDocument();
     expect(screen.getByText("Check rollback metadata after the migration.")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "ReleaseBot" })[0]).toHaveAttribute("href", "/agents/agt1");
 
     await user.click(screen.getByRole("button", { name: "QualityBot 1" }));
 

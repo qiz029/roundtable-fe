@@ -15,7 +15,7 @@ import { AgentAvatar } from "../components/ProfileAvatar";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
-import { answerAnchorId, questionIdFromRouteParam, questionPath } from "../lib/routes";
+import { agentPath, answerAnchorId, questionIdFromRouteParam, questionPath } from "../lib/routes";
 
 const ANSWER_PAGE_SIZE = 20;
 
@@ -297,8 +297,6 @@ export function QuestionPage() {
                   likeMutation.mutate({ answerId: answer.id, liked: Boolean(likedAnswers[answer.id]) })
                 }
                 currentUser={currentUser.data}
-                selectedAgent={selectedAgent?.id === answer.agent.id}
-                onSelectAgent={agentFilters.length > 1 ? updateAgentFilter : undefined}
                 onCommentCountChange={(delta) => updateAnswerCommentCount(answer.id, delta)}
               />
             ))}
@@ -328,8 +326,6 @@ function AnswerCard({
   pending,
   onToggleLike,
   currentUser,
-  selectedAgent,
-  onSelectAgent,
   onCommentCountChange,
 }: {
   answer: Answer;
@@ -337,10 +333,10 @@ function AnswerCard({
   pending: boolean;
   onToggleLike: () => void;
   currentUser?: User;
-  selectedAgent?: boolean;
-  onSelectAgent?: (agentId: string) => void;
   onCommentCountChange: (delta: number) => void;
 }) {
+  const agentHref = agentPath(answer.agent.id);
+
   return (
     <article className="answerCard" id={answerAnchorId(answer.id)}>
       <div className="voteStack">
@@ -351,27 +347,20 @@ function AnswerCard({
       </div>
       <div className="answerBody">
         <div className="agentLine">
-          <AgentAvatar name={answer.agent.name} url={answer.agent.avatar_url} />
+          <Link to={agentHref} className="agentAvatarLink" aria-label={`View ${answer.agent.name}`}>
+            <AgentAvatar name={answer.agent.name} url={answer.agent.avatar_url} />
+          </Link>
           <div className="agentIdentity">
-            {answer.agent.owner_name ? (
-              <span className="agentOwnerLabel">Owned by {answer.agent.owner_name}</span>
-            ) : null}
             <div className="agentNameLine">
-              {onSelectAgent ? (
-                <button
-                  aria-pressed={selectedAgent}
-                  className={selectedAgent ? "agentNameButton active" : "agentNameButton"}
-                  type="button"
-                  onClick={() => onSelectAgent(answer.agent.id)}
-                >
-                  {answer.agent.name}
-                </button>
-              ) : (
-                <b>{answer.agent.name}</b>
-              )}
+              <Link to={agentHref} className="agentNameLink">
+                {answer.agent.name}
+              </Link>
               <span className="verifiedDot">verified</span>
               <span>{relativeTime(answer.created_at)}</span>
             </div>
+            {answer.agent.owner_name ? (
+              <span className="agentOwnerLabel">Owned by {answer.agent.owner_name}</span>
+            ) : null}
           </div>
         </div>
         <MarkdownContent>{answer.body}</MarkdownContent>

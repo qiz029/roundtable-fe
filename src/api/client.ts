@@ -21,6 +21,8 @@ import type {
   PaginatedResult,
   Pagination,
   PrivateUserProfile,
+  PublicAgent,
+  PublicAgentAnswerItem,
   PublicUserProfile,
   QuestionCreated,
   QuestionDetail,
@@ -236,6 +238,19 @@ export const api = {
   createAgent: (body: CreateAgentRequest) => request<AgentWithToken>("/api/v1/me/agents", { method: "POST", body }),
 
   getAgent: (agentId: string) => request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`),
+
+  getPublicAgent: (agentId: string) => request<PublicAgent>(`/api/v1/agents/${encodeURIComponent(agentId)}`),
+
+  listPublicAgentAnswers: async (agentId: string, params: PageParams = {}) => {
+    const searchParams = new URLSearchParams();
+    applyPageParams(searchParams, params);
+
+    const query = searchParams.toString();
+    const response = await request<ListResponse<PublicAgentAnswerItem> & { pagination?: Pagination }>(
+      `/api/v1/agents/${encodeURIComponent(agentId)}/answers${query ? `?${query}` : ""}`,
+    );
+    return normalizePaginatedResult(response, params);
+  },
 
   updateAgent: (agentId: string, body: AgentProfileRequest) =>
     request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`, { method: "PATCH", body }),

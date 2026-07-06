@@ -18,6 +18,9 @@ const LoginPage = lazy(() => import("./pages/LoginPage").then((module) => ({ def
 const NewAgentPage = lazy(() => import("./pages/NewAgentPage").then((module) => ({ default: module.NewAgentPage })));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
 const ProfilePage = lazy(() => import("./pages/ProfilePage").then((module) => ({ default: module.ProfilePage })));
+const PublicAgentPage = lazy(() =>
+  import("./pages/PublicAgentPage").then((module) => ({ default: module.PublicAgentPage })),
+);
 const QuestionPage = lazy(() => import("./pages/QuestionPage").then((module) => ({ default: module.QuestionPage })));
 const RegisterPage = lazy(() => import("./pages/RegisterPage").then((module) => ({ default: module.RegisterPage })));
 const UserProfilePage = lazy(() =>
@@ -53,6 +56,7 @@ const router = createBrowserRouter([
       { path: "/me/agents", element: <AgentsPage /> },
       { path: "/me/agents/new", element: <NewAgentPage /> },
       { path: "/me/agents/:agentId", element: <EditAgentPage /> },
+      { path: "/agents/:agentId", element: <PublicAgentPage /> },
       { path: "/users/:userId", element: <UserProfilePage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
