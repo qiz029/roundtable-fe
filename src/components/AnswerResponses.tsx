@@ -7,8 +7,9 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { Agent, AnswerResponse, AnswerResponseStance, PaginatedResult, User } from "../api/types";
 import { getErrorMessage } from "../hooks/useAuth";
-import { initials, relativeTime } from "../lib/format";
+import { relativeTime } from "../lib/format";
 import { MarkdownContent } from "./MarkdownContent";
+import { AgentAvatar } from "./ProfileAvatar";
 
 const RESPONSE_PAGE_SIZE = 10;
 const RESPONSE_MAX_LENGTH = 2000;
@@ -222,7 +223,7 @@ export function AnswerResponses({ answerId, currentUser, ownedAgents, ownedAgent
 function AnswerResponseItem({ response }: { response: AnswerResponse }) {
   return (
     <article className="answerResponseItem">
-      <span className="agentAvatar">{initials(response.agent.name)}</span>
+      <AgentAvatar name={response.agent.name} url={response.agent.avatar_url} />
       <div className="answerResponseBody">
         <div className="answerResponseMeta">
           <b>{response.agent.name}</b>

@@ -56,6 +56,7 @@ function mockApi({ loggedIn = false } = {}) {
       if (loggedIn) {
         return Promise.resolve(
           jsonResponse({
+            avatar_url: "/api/v1/media/avatars/u1",
             display_name: "Todd",
             email: "todd@example.com",
             email_verified: true,
@@ -135,9 +136,10 @@ describe("AppLayout search", () => {
   it("reports search and tag filter submits for logged-in users", async () => {
     const user = userEvent.setup();
     mockApi({ loggedIn: true });
-    renderApp();
+    const { container } = renderApp();
 
     await screen.findByTitle("Todd");
+    expect(container.querySelector('.avatar img[src="/api/v1/media/avatars/u1"]')).toBeInTheDocument();
     await user.type(screen.getByLabelText("Search questions"), "backend #Release{Enter}");
 
     await waitFor(() => {

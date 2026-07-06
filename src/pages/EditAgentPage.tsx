@@ -4,13 +4,15 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { Agent, AgentStatus } from "../api/types";
+import { AvatarUploadControl } from "../components/AvatarUploadControl";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { PillInput } from "../components/Pill";
+import { AgentAvatar } from "../components/ProfileAvatar";
 import { AgentScoreSummary } from "../components/ScoreSummary";
 import { TokenPanel } from "../components/TokenPanel";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { currentPeriod, formatDateTime, initials } from "../lib/format";
+import { currentPeriod, formatDateTime } from "../lib/format";
 
 export function EditAgentPage() {
   const { agentId } = useParams();
@@ -18,6 +20,7 @@ export function EditAgentPage() {
   const currentUser = useCurrentUser();
   const scorePeriod = currentPeriod();
   const [latestToken, setLatestToken] = useState<string | null>(null);
+  const [loadedAgentId, setLoadedAgentId] = useState("");
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -44,6 +47,7 @@ export function EditAgentPage() {
 
   useEffect(() => {
     if (!agent.data) return;
+    if (loadedAgentId === agent.data.id) return;
     setForm({
       name: agent.data.name || "",
       description: agent.data.description || "",
@@ -54,7 +58,8 @@ export function EditAgentPage() {
       is_public: agent.data.is_public,
       status: agent.data.status || "active",
     });
-  }, [agent.data]);
+    setLoadedAgentId(agent.data.id);
+  }, [agent.data, loadedAgentId]);
 
   const updateAgent = useMutation({
     mutationFn: () =>
@@ -78,6 +83,22 @@ export function EditAgentPage() {
     mutationFn: () => api.resetAgentToken(agentId!),
     onSuccess: (result) => {
       setLatestToken(result.token);
+    },
+  });
+
+  const uploadAvatar = useMutation({
+    mutationFn: (file: File) => api.uploadAgentAvatar(agentId!, file),
+    onSuccess: async (result) => {
+      queryClient.setQueryData<Agent>(["agent", agentId], result);
+      await queryClient.invalidateQueries({ queryKey: ["agents"] });
+    },
+  });
+
+  const deleteAvatar = useMutation({
+    mutationFn: () => api.deleteAgentAvatar(agentId!),
+    onSuccess: async (result) => {
+      queryClient.setQueryData<Agent>(["agent", agentId], result);
+      await queryClient.invalidateQueries({ queryKey: ["agents"] });
     },
   });
 
@@ -125,7 +146,7 @@ export function EditAgentPage() {
   return (
     <div className="agentManagePage">
       <section className="agentManageHero">
-        <span className="agentAvatar agentAvatarLarge">{initials(form.name || agent.data.name)}</span>
+        <AgentAvatar name={form.name || agent.data.name} url={agent.data.avatar_url} size="lg" />
         <div>
           <span className="eyebrow">Agent profile</span>
           <h1>{form.name || agent.data.name}</h1>
@@ -155,6 +176,18 @@ export function EditAgentPage() {
       <form className="agentManageGrid" onSubmit={handleSubmit}>
         <section className="profilePanel">
           <h2>Identity</h2>
+          <AvatarUploadControl
+            deleteError={deleteAvatar.error}
+            deletePending={deleteAvatar.isPending}
+            id="agent-avatar"
+            kind="agent"
+            name={form.name || agent.data.name}
+            uploadError={uploadAvatar.error}
+            uploadPending={uploadAvatar.isPending}
+            url={agent.data.avatar_url}
+            onDelete={() => deleteAvatar.mutate()}
+            onUpload={(file) => uploadAvatar.mutate(file)}
+          />
           <label>
             Name
             <input value={form.name} onChange={(event) => updateField("name", event.target.value)} required />

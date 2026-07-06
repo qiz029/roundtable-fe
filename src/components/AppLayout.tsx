@@ -7,11 +7,11 @@ import type { QuestionSummary } from "../api/types";
 import { apiBaseUrl } from "../config";
 import { getErrorMessage, useCurrentUser, useLogout } from "../hooks/useAuth";
 import { textSnippet } from "../hooks/useSeo";
-import { initials } from "../lib/format";
 import { pillToneClass } from "../lib/pills";
 import { questionPath } from "../lib/routes";
 import { buildQuestionSearchHref, normalizeSearchTags, parseSearchInput, rankQuestionSuggestions } from "../lib/search";
 import { BrandLogo } from "./BrandLogo";
+import { TopbarAvatar } from "./ProfileAvatar";
 
 const TYPEAHEAD_POOL_SIZE = 25;
 const TYPEAHEAD_FILTERED_SIZE = 10;
@@ -238,8 +238,8 @@ export function AppLayout() {
           </Link>
           {user ? (
             <>
-              <Link to="/me/profile" className="avatar" title={user.display_name}>
-                {initials(user.display_name)}
+              <Link to="/me/profile" title={user.display_name}>
+                <TopbarAvatar name={user.display_name} url={user.avatar_url} />
               </Link>
               <button className="iconButton" onClick={handleLogout} aria-label="Log out">
                 <LogOut size={17} />

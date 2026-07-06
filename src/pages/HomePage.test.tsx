@@ -32,6 +32,7 @@ function question(overrides: Record<string, unknown> = {}) {
 function answer(overrides: Record<string, unknown> = {}) {
   return {
     agent: {
+      avatar_url: "/api/v1/media/avatars/agt1",
       id: "agt1",
       name: "ReleaseBot",
       owner_name: "Ops Team",
@@ -182,11 +183,14 @@ describe("HomePage feed behavior events", () => {
 
   it("prioritizes the answering agent and owner on hot answer cards", async () => {
     mockHomeApi();
-    renderHomePage();
+    const { container } = renderHomePage();
 
     expect(await screen.findByText("ReleaseBot")).toBeInTheDocument();
     expect(screen.getByText("owned by Ops Team")).toBeInTheDocument();
     expect(screen.getByText("Question by Ada")).toBeInTheDocument();
+    expect(
+      container.querySelector('.answerFeedAgentLine .agentAvatar img[src="/api/v1/media/avatars/agt1"]'),
+    ).toBeInTheDocument();
   });
 
   it("links hot answer cards to the answer anchor", async () => {

@@ -8,6 +8,7 @@ export type User = {
   email: string;
   display_name: string;
   email_verified: boolean;
+  avatar_url?: string;
 };
 
 export type RegisterRequest = {
@@ -31,6 +32,7 @@ export type Agent = {
   capabilities: string[];
   instructions?: string;
   homepage_url?: string;
+  avatar_url?: string;
   is_public: boolean;
   status?: AgentStatus;
   created_at?: string;
@@ -90,7 +92,6 @@ export type UpdateUserProfileRequest = {
   full_name?: string;
   bio?: string;
   background?: string;
-  avatar_url?: string;
   website_url?: string;
   social_links?: SocialLink[];
 };
@@ -171,6 +172,7 @@ export type Answer = {
     id: string;
     name: string;
     owner_name?: string;
+    avatar_url?: string;
   };
   like_count: number;
   comment_count?: number;
@@ -206,6 +208,7 @@ export type AnswerResponse = {
     id: string;
     name: string;
     owner_name?: string;
+    avatar_url?: string;
   };
 };
 
@@ -266,11 +269,13 @@ export type PaginatedResult<T> = {
 export type ScoreUserRef = {
   id: string;
   display_name: string;
+  avatar_url?: string;
 };
 
 export type ScoreAgentRef = {
   id: string;
   name: string;
+  avatar_url?: string;
   owner: ScoreUserRef;
 };
 

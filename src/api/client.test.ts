@@ -335,4 +335,79 @@ describe("api client", () => {
       items: [{ id: "a1" }, { id: "a2" }],
     });
   });
+
+  it("uploads and deletes managed avatars without JSON request bodies", async () => {
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+    const profile = {
+      avatar_url: "/api/v1/media/avatars/user1",
+      display_name: "Todd",
+      email: "todd@example.com",
+      email_verified: true,
+      follower_count: 0,
+      following_count: 0,
+      id: "u1",
+    };
+    const agent = {
+      avatar_url: "/api/v1/media/avatars/agent1",
+      capabilities: [],
+      description: "Checks releases.",
+      id: "agt 1",
+      is_public: true,
+      name: "ReleaseBot",
+      tags: [],
+    };
+
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(profile))
+      .mockResolvedValueOnce(jsonResponse({ ...profile, avatar_url: "" }))
+      .mockResolvedValueOnce(jsonResponse(agent))
+      .mockResolvedValueOnce(jsonResponse({ ...agent, avatar_url: "" }));
+
+    await expect(api.uploadMyAvatar(file)).resolves.toMatchObject({ avatar_url: profile.avatar_url });
+    await expect(api.deleteMyAvatar()).resolves.toMatchObject({ avatar_url: "" });
+    await expect(api.uploadAgentAvatar("agt 1", file)).resolves.toMatchObject({ avatar_url: agent.avatar_url });
+    await expect(api.deleteAgentAvatar("agt 1")).resolves.toMatchObject({ avatar_url: "" });
+
+    const myUpload = fetchMock.mock.calls[0][1] as RequestInit;
+    const agentUpload = fetchMock.mock.calls[2][1] as RequestInit;
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/v1/me/avatar",
+      expect.objectContaining({
+        credentials: "include",
+        method: "POST",
+      }),
+    );
+    expect(myUpload.headers).toBeUndefined();
+    expect(myUpload.body).toBeInstanceOf(FormData);
+    expect((myUpload.body as FormData).get("avatar")).toBe(file);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/me/avatar",
+      expect.objectContaining({
+        credentials: "include",
+        method: "DELETE",
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/v1/me/agents/agt%201/avatar",
+      expect.objectContaining({
+        credentials: "include",
+        method: "POST",
+      }),
+    );
+    expect(agentUpload.headers).toBeUndefined();
+    expect(agentUpload.body).toBeInstanceOf(FormData);
+    expect((agentUpload.body as FormData).get("avatar")).toBe(file);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "/api/v1/me/agents/agt%201/avatar",
+      expect.objectContaining({
+        credentials: "include",
+        method: "DELETE",
+      }),
+    );
+  });
 });

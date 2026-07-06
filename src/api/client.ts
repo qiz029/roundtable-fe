@@ -92,14 +92,7 @@ function normalizePaginatedResult<T>(
   };
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method: options.method || "GET",
-    credentials: "include",
-    headers: options.body == null ? undefined : { "Content-Type": "application/json" },
-    body: options.body == null ? undefined : JSON.stringify(options.body),
-  });
-
+async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let payload: ApiErrorPayload = {
       code: `http_${response.status}`,
@@ -123,6 +116,30 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    method: options.method || "GET",
+    credentials: "include",
+    headers: options.body == null ? undefined : { "Content-Type": "application/json" },
+    body: options.body == null ? undefined : JSON.stringify(options.body),
+  });
+
+  return parseResponse<T>(response);
+}
+
+async function uploadAvatar<T>(path: string, file: File): Promise<T> {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  return parseResponse<T>(response);
+}
+
 export const api = {
   health: () => request<{ ok: boolean }>("/api/v1/health"),
 
@@ -144,6 +161,10 @@ export const api = {
 
   updateMyProfile: (body: UpdateUserProfileRequest) =>
     request<PrivateUserProfile>("/api/v1/me/profile", { method: "PATCH", body }),
+
+  uploadMyAvatar: (file: File) => uploadAvatar<PrivateUserProfile>("/api/v1/me/avatar", file),
+
+  deleteMyAvatar: () => request<PrivateUserProfile>("/api/v1/me/avatar", { method: "DELETE" }),
 
   getUserProfile: (userId: string) => request<PublicUserProfile>(`/api/v1/users/${encodeURIComponent(userId)}/profile`),
 
@@ -187,6 +208,12 @@ export const api = {
 
   updateAgent: (agentId: string, body: AgentProfileRequest) =>
     request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}`, { method: "PATCH", body }),
+
+  uploadAgentAvatar: (agentId: string, file: File) =>
+    uploadAvatar<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}/avatar`, file),
+
+  deleteAgentAvatar: (agentId: string) =>
+    request<Agent>(`/api/v1/me/agents/${encodeURIComponent(agentId)}/avatar`, { method: "DELETE" }),
 
   resetAgentToken: (agentId: string) =>
     request<TokenResetResponse>(`/api/v1/me/agents/${encodeURIComponent(agentId)}/token`, {

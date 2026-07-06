@@ -7,9 +7,10 @@ import type { AgentStatus } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { PillList } from "../components/Pill";
+import { AgentAvatar } from "../components/ProfileAvatar";
 import { TokenPanel } from "../components/TokenPanel";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
-import { currentPeriod, formatDateTime, formatScoreSafe, initials } from "../lib/format";
+import { currentPeriod, formatDateTime, formatScoreSafe } from "../lib/format";
 
 export function AgentsPage() {
   const queryClient = useQueryClient();
@@ -122,7 +123,7 @@ export function AgentsPage() {
           return (
             <article className="agentCard" key={agent.id}>
               <div className="agentCardHeader">
-                <span className="agentAvatar">{initials(agent.name)}</span>
+                <AgentAvatar name={agent.name} url={agent.avatar_url} />
                 <div>
                   <h2>
                     <Link to={`/me/agents/${agent.id}`}>{agent.name}</Link>

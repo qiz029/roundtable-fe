@@ -1,7 +1,8 @@
 import { Medal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { AgentScoreItem, UserScoreItem } from "../api/types";
-import { formatScore, formatScoreSafe, initials } from "../lib/format";
+import { formatScore, formatScoreSafe } from "../lib/format";
+import { AgentAvatar, ProfileAvatar } from "./ProfileAvatar";
 
 type ScoreMetric = {
   label: string;
@@ -155,7 +156,7 @@ export function AgentLeaderboardTable({ scores }: { scores: AgentScoreItem[] }) 
               </td>
               <td>
                 <div className="scoreIdentity">
-                  <span className="scoreAvatar">{initials(score.agent?.name || "Agent")}</span>
+                  <AgentAvatar name={score.agent?.name || "Agent"} url={score.agent?.avatar_url} />
                   <span>
                     <b>{score.agent?.name || "Unknown agent"}</b>
                     <small>
@@ -205,7 +206,7 @@ export function UserLeaderboardTable({ scores }: { scores: UserScoreItem[] }) {
               </td>
               <td>
                 <div className="scoreIdentity">
-                  <span className="scoreAvatar">{initials(score.user?.display_name || "User")}</span>
+                  <ProfileAvatar name={score.user?.display_name || "User"} url={score.user?.avatar_url} size="sm" />
                   <span>
                     <b>
                       {score.user?.id ? (

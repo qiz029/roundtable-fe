@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { PrivateUserProfile, SocialLink } from "../api/types";
+import { AvatarUploadControl } from "../components/AvatarUploadControl";
 import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { ProfileAvatar } from "../components/ProfileAvatar";
@@ -36,10 +37,10 @@ export function ProfilePage() {
     full_name: "",
     bio: "",
     background: "",
-    avatar_url: "",
     website_url: "",
     social_links: "",
   });
+  const [loadedProfileId, setLoadedProfileId] = useState("");
 
   const profile = useQuery({
     queryKey: ["my-profile"],
@@ -49,19 +50,36 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (!profile.data) return;
+    if (loadedProfileId === profile.data.id) return;
     setForm({
       display_name: profile.data.display_name || "",
       full_name: profile.data.full_name || "",
       bio: profile.data.bio || "",
       background: profile.data.background || "",
-      avatar_url: profile.data.avatar_url || "",
       website_url: profile.data.website_url || "",
       social_links: serializeSocialLinks(profile.data.social_links),
     });
-  }, [profile.data]);
+    setLoadedProfileId(profile.data.id);
+  }, [loadedProfileId, profile.data]);
 
   const updateProfile = useMutation({
     mutationFn: api.updateMyProfile,
+    onSuccess: async (result) => {
+      queryClient.setQueryData<PrivateUserProfile>(["my-profile"], result);
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+
+  const uploadAvatar = useMutation({
+    mutationFn: api.uploadMyAvatar,
+    onSuccess: async (result) => {
+      queryClient.setQueryData<PrivateUserProfile>(["my-profile"], result);
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+
+  const deleteAvatar = useMutation({
+    mutationFn: api.deleteMyAvatar,
     onSuccess: async (result) => {
       queryClient.setQueryData<PrivateUserProfile>(["my-profile"], result);
       await queryClient.invalidateQueries({ queryKey: ["me"] });
@@ -79,7 +97,6 @@ export function ProfilePage() {
       full_name: form.full_name.trim(),
       bio: form.bio.trim(),
       background: form.background.trim(),
-      avatar_url: form.avatar_url.trim(),
       website_url: form.website_url.trim(),
       social_links: parseSocialLinks(form.social_links),
     });
@@ -134,20 +151,18 @@ export function ProfilePage() {
         <form className="profileForm" onSubmit={handleSubmit}>
           <section className="profilePanel">
             <h2>Identity</h2>
-            <div className="profileAvatarRow">
-              <ProfileAvatar name={previewName} url={form.avatar_url} size="lg" />
-              <div>
-                <p>Use an image URL for now. File uploads are not exposed by the backend.</p>
-                <label>
-                  Avatar URL
-                  <input
-                    value={form.avatar_url}
-                    onChange={(event) => updateField("avatar_url", event.target.value)}
-                    placeholder="https://example.com/avatar.png"
-                  />
-                </label>
-              </div>
-            </div>
+            <AvatarUploadControl
+              deleteError={deleteAvatar.error}
+              deletePending={deleteAvatar.isPending}
+              id="profile-avatar"
+              kind="user"
+              name={previewName}
+              uploadError={uploadAvatar.error}
+              uploadPending={uploadAvatar.isPending}
+              url={profile.data.avatar_url}
+              onDelete={() => deleteAvatar.mutate()}
+              onUpload={(file) => uploadAvatar.mutate(file)}
+            />
             <div className="twoColumnFields">
               <label>
                 Display name
@@ -217,7 +232,7 @@ export function ProfilePage() {
 
       <aside className="profilePreview">
         <span className="eyebrow">Public preview</span>
-        <ProfileAvatar name={previewName} url={form.avatar_url} size="lg" />
+        <ProfileAvatar name={previewName} url={profile.data.avatar_url} size="lg" />
         <h2>{previewName}</h2>
         <span>{form.display_name}</span>
         <p>{form.bio || "No bio yet."}</p>

@@ -2,10 +2,11 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Answer, FeedReason, QuestionSummary } from "../api/types";
-import { compactNumber, initials, relativeTime } from "../lib/format";
+import { compactNumber, relativeTime } from "../lib/format";
 import { questionAnswerPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
 import { PillList } from "./Pill";
+import { AgentAvatar } from "./ProfileAvatar";
 
 type AnswerFeedCardProps = {
   answer: Answer;
@@ -63,7 +64,7 @@ export function AnswerFeedCard({
   return (
     <article className="answerFeedCard">
       <div className="answerFeedAgentLine">
-        <span className="agentAvatar">{initials(answer.agent.name)}</span>
+        <AgentAvatar name={answer.agent.name} url={answer.agent.avatar_url} />
         <div className="agentIdentity">
           <span className="answerFeedAgentKicker">Answered by</span>
           <div className="agentNameLine">

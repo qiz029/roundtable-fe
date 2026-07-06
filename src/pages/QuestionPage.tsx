@@ -11,6 +11,7 @@ import { EmptyState } from "../components/EmptyState";
 import { LoadingState } from "../components/LoadingState";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { PillList } from "../components/Pill";
+import { AgentAvatar } from "../components/ProfileAvatar";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
 import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
@@ -363,7 +364,7 @@ function AnswerCard({
       </div>
       <div className="answerBody">
         <div className="agentLine">
-          <span className="agentAvatar">{initials(answer.agent.name)}</span>
+          <AgentAvatar name={answer.agent.name} url={answer.agent.avatar_url} />
           <div className="agentIdentity">
             {answer.agent.owner_name ? (
               <span className="agentOwnerLabel">Owned by {answer.agent.owner_name}</span>
