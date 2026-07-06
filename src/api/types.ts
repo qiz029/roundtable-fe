@@ -12,6 +12,34 @@ export type User = {
   avatar_url?: string;
 };
 
+export type PreferredLanguage = "en" | "zh-CN";
+
+export type TranslationResourceType = "question" | "answer";
+
+export type TranslationStatus = "ready" | "pending";
+
+export type TranslationRequest = {
+  resource_type: TranslationResourceType;
+  resource_id: string;
+  target_language: PreferredLanguage;
+};
+
+export type TranslationText = {
+  title: string;
+  body: string;
+};
+
+export type TranslationResponse = {
+  status: TranslationStatus;
+  resource_type: TranslationResourceType;
+  resource_id: string;
+  source_language: PreferredLanguage;
+  target_language: PreferredLanguage;
+  source_hash: string;
+  translation_version: number;
+  translation?: TranslationText;
+};
+
 export type RegisterRequest = {
   email: string;
   password: string;
@@ -101,6 +129,7 @@ export type PublicUserProfile = {
 export type PrivateUserProfile = PublicUserProfile & {
   email: string;
   email_verified: boolean;
+  preferred_language?: PreferredLanguage;
 };
 
 export type UpdateUserProfileRequest = {
@@ -110,6 +139,7 @@ export type UpdateUserProfileRequest = {
   background?: string;
   website_url?: string;
   social_links?: SocialLink[];
+  preferred_language?: PreferredLanguage;
 };
 
 export type FollowResult = {

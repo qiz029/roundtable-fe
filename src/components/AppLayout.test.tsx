@@ -49,11 +49,19 @@ function renderApp(initialEntry = "/") {
   );
 }
 
-function mockApi({ loggedIn = false } = {}) {
-  fetchMock.mockImplementation((input: string | URL | Request) => {
+function mockApi({ loggedIn = false, profileLanguage = "en" } = {}) {
+  let isLoggedIn = loggedIn;
+  let savedProfileLanguage = profileLanguage;
+
+  fetchMock.mockImplementation((input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
+    if (url.includes("/api/v1/auth/logout")) {
+      isLoggedIn = false;
+      return Promise.resolve(jsonResponse({ ok: true }));
+    }
+
     if (url.includes("/api/v1/auth/me")) {
-      if (loggedIn) {
+      if (isLoggedIn) {
         return Promise.resolve(
           jsonResponse({
             avatar_url: "/api/v1/media/avatars/u1",
@@ -70,6 +78,46 @@ function mockApi({ loggedIn = false } = {}) {
           { code: "session_required", message: "Log in first." },
           { status: 401, statusText: "Unauthorized" },
         ),
+      );
+    }
+
+    if (url.includes("/api/v1/me/profile") && init?.method === "PATCH") {
+      const body = JSON.parse(String(init.body));
+      savedProfileLanguage = body.preferred_language || savedProfileLanguage;
+      return Promise.resolve(
+        jsonResponse({
+          avatar_url: "/api/v1/media/avatars/u1",
+          bio: "",
+          display_name: "Todd",
+          email: "todd@example.com",
+          email_verified: true,
+          follower_count: 0,
+          following_count: 0,
+          full_name: "",
+          id: "u1",
+          preferred_language: savedProfileLanguage,
+          social_links: [],
+          website_url: "",
+        }),
+      );
+    }
+
+    if (url.includes("/api/v1/me/profile")) {
+      return Promise.resolve(
+        jsonResponse({
+          avatar_url: "/api/v1/media/avatars/u1",
+          bio: "",
+          display_name: "Todd",
+          email: "todd@example.com",
+          email_verified: true,
+          follower_count: 0,
+          following_count: 0,
+          full_name: "",
+          id: "u1",
+          preferred_language: savedProfileLanguage,
+          social_links: [],
+          website_url: "",
+        }),
       );
     }
 
@@ -101,8 +149,19 @@ function eventBodies() {
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 }
 
+function profilePatchBodies() {
+  return fetchMock.mock.calls
+    .filter(([url, init]) => String(url).includes("/api/v1/me/profile") && init?.method === "PATCH")
+    .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+}
+
+function clearLanguageCookie() {
+  document.cookie = "roundtable_lang=; Max-Age=0; Path=/";
+}
+
 describe("AppLayout search", () => {
   beforeEach(() => {
+    clearLanguageCookie();
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     mockApi();
@@ -110,6 +169,7 @@ describe("AppLayout search", () => {
 
   afterEach(() => {
     cleanup();
+    clearLanguageCookie();
     vi.unstubAllGlobals();
   });
 
@@ -154,5 +214,65 @@ describe("AppLayout search", () => {
         tags: ["release"],
       });
     });
+  });
+});
+
+describe("AppLayout language preference", () => {
+  beforeEach(() => {
+    clearLanguageCookie();
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    mockApi();
+  });
+
+  afterEach(() => {
+    cleanup();
+    clearLanguageCookie();
+    vi.unstubAllGlobals();
+  });
+
+  it("uses and updates the anonymous language cookie without PATCHing profile", async () => {
+    document.cookie = "roundtable_lang=zh-CN; Path=/";
+    const user = userEvent.setup();
+    renderApp();
+
+    const selector = screen.getByLabelText("Language");
+    expect(selector).toHaveValue("zh-CN");
+
+    await user.selectOptions(selector, "en");
+
+    expect(document.cookie).toContain("roundtable_lang=en");
+    expect(profilePatchBodies()).toHaveLength(0);
+  });
+
+  it("lets a loaded profile preference override the anonymous cookie", async () => {
+    document.cookie = "roundtable_lang=zh-CN; Path=/";
+    mockApi({ loggedIn: true, profileLanguage: "en" });
+
+    renderApp();
+
+    await waitFor(() => expect(screen.getByLabelText("Language")).toHaveValue("en"));
+    expect(document.cookie).toContain("roundtable_lang=en");
+  });
+
+  it("PATCHes logged-in profile language changes and keeps the cookie after logout", async () => {
+    const user = userEvent.setup();
+    mockApi({ loggedIn: true, profileLanguage: "en" });
+    renderApp();
+
+    const selector = screen.getByLabelText("Language");
+    await waitFor(() => expect(selector).toHaveValue("en"));
+    await user.selectOptions(selector, "zh-CN");
+
+    await waitFor(() => {
+      expect(profilePatchBodies()).toContainEqual({ preferred_language: "zh-CN" });
+    });
+    expect(document.cookie).toContain("roundtable_lang=zh-CN");
+
+    await user.click(await screen.findByLabelText("Log out"));
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/auth/logout"))).toBe(true),
+    );
+    expect(document.cookie).toContain("roundtable_lang=zh-CN");
   });
 });

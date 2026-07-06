@@ -138,6 +138,58 @@ describe("api client", () => {
     );
   });
 
+  it("requests cached translations with typed resource metadata", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        resource_id: "q1",
+        resource_type: "question",
+        source_hash: "hash1",
+        source_language: "en",
+        status: "ready",
+        target_language: "zh-CN",
+        translation: {
+          body: "部署和迁移检查清单",
+          title: "后端发布流程",
+        },
+        translation_version: 2,
+      }),
+    );
+
+    await expect(
+      api.getTranslation({
+        resource_id: "q1",
+        resource_type: "question",
+        target_language: "zh-CN",
+      }),
+    ).resolves.toMatchObject({
+      resource_id: "q1",
+      resource_type: "question",
+      status: "ready",
+      target_language: "zh-CN",
+      translation: {
+        title: "后端发布流程",
+      },
+      translation_version: 2,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/translations",
+      expect.objectContaining({
+        body: JSON.stringify({
+          resource_id: "q1",
+          resource_type: "question",
+          target_language: "zh-CN",
+        }),
+        credentials: "include",
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+          "X-Request-Id": expect.stringMatching(/^rt_req_/),
+        }),
+        method: "POST",
+      }),
+    );
+  });
+
   it("builds answer feed queries with pagination", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

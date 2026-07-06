@@ -306,6 +306,24 @@ main {
   flex: none;
 }
 
+.languageSelect {
+  height: 36px;
+  min-width: 104px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0 28px 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.languageSelect:focus {
+  border-color: var(--blue);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
 .mobileNav {
   display: none;
   align-items: center;
@@ -1075,6 +1093,20 @@ main {
 
 .inlineAction:hover {
   color: var(--red);
+}
+
+.translationToggle {
+  align-self: flex-start;
+  color: var(--blue);
+  font-size: 12.5px;
+}
+
+.translationToggle:hover {
+  color: var(--blue-dark);
+}
+
+.answerFeedBodyFooter .translationToggle {
+  margin-right: auto;
 }
 
 .scorePill {
@@ -3555,6 +3587,11 @@ main {
   .topbarActions .buttonPrimary span,
   .topbarActions .buttonSecondary span {
     display: none;
+  }
+
+  .languageSelect {
+    min-width: 92px;
+    max-width: 92px;
   }
 
   .mobileNav {

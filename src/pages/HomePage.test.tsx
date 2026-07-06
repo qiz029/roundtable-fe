@@ -3,6 +3,8 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import type { PreferredLanguage, TranslationResponse } from "../api/types";
+import { LanguagePreferenceProvider } from "../components/LanguagePreferenceProvider";
 import { HomePage } from "./HomePage";
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -45,7 +47,7 @@ function answer(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function renderHomePage(initialEntry = "/") {
+function renderHomePage(initialEntry = "/", language: PreferredLanguage = "en") {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -57,14 +59,28 @@ function renderHomePage(initialEntry = "/") {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
-        <HomePage />
+        <LanguagePreferenceProvider language={language}>
+          <HomePage />
+        </LanguagePreferenceProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 
-function mockHomeApi({ loggedIn = true } = {}) {
-  fetchMock.mockImplementation((input: string | URL | Request) => {
+function translationKey(resourceType: string, resourceId: string, targetLanguage: string) {
+  return `${resourceType}:${resourceId}:${targetLanguage}`;
+}
+
+function mockHomeApi({
+  loggedIn = true,
+  missingTranslationStatus = "pending",
+  translations = {},
+}: {
+  loggedIn?: boolean;
+  missingTranslationStatus?: "not_found" | "pending";
+  translations?: Record<string, TranslationResponse>;
+} = {}) {
+  fetchMock.mockImplementation((input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
 
     if (url.includes("/api/v1/auth/me")) {
@@ -83,6 +99,36 @@ function mockHomeApi({ loggedIn = true } = {}) {
           email: "todd@example.com",
           email_verified: true,
           id: "u1",
+        }),
+      );
+    }
+
+    if (url.includes("/api/v1/translations")) {
+      const body = JSON.parse(String(init?.body || "{}"));
+      const cached = translations[translationKey(body.resource_type, body.resource_id, body.target_language)];
+
+      if (cached) {
+        return Promise.resolve(jsonResponse(cached));
+      }
+
+      if (missingTranslationStatus === "not_found") {
+        return Promise.resolve(
+          jsonResponse(
+            { code: "translation_not_found", message: "Translation not found." },
+            { status: 404, statusText: "Not Found" },
+          ),
+        );
+      }
+
+      return Promise.resolve(
+        jsonResponse({
+          resource_id: body.resource_id,
+          resource_type: body.resource_type,
+          source_hash: "pending-hash",
+          source_language: "en",
+          status: "pending",
+          target_language: body.target_language,
+          translation_version: 0,
         }),
       );
     }
@@ -144,6 +190,12 @@ function eventBodies() {
   return feedEventCalls().map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 }
 
+function translationRequestBodies() {
+  return fetchMock.mock.calls
+    .filter(([url]) => String(url).includes("/api/v1/translations"))
+    .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+}
+
 describe("HomePage feed behavior events", () => {
   beforeEach(() => {
     fetchMock = vi.fn();
@@ -203,6 +255,101 @@ describe("HomePage feed behavior events", () => {
       "/q/backend-release-workflow--q1#answer-ans1",
     );
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/questions/q1"))).toBe(false);
+  });
+
+  it("shows ready translations on hot answer cards without changing answer anchors", async () => {
+    const user = userEvent.setup();
+    mockHomeApi({
+      translations: {
+        [translationKey("answer", "ans1", "zh-CN")]: {
+          resource_id: "ans1",
+          resource_type: "answer",
+          source_hash: "answer-hash",
+          source_language: "en",
+          status: "ready",
+          target_language: "zh-CN",
+          translation: {
+            body: "先运行迁移预检，然后部署二进制并验证健康状态。",
+            title: "",
+          },
+          translation_version: 1,
+        },
+        [translationKey("question", "q1", "zh-CN")]: {
+          resource_id: "q1",
+          resource_type: "question",
+          source_hash: "question-hash",
+          source_language: "en",
+          status: "ready",
+          target_language: "zh-CN",
+          translation: {
+            body: "部署和迁移检查清单",
+            title: "后端发布流程",
+          },
+          translation_version: 1,
+        },
+      },
+    });
+    renderHomePage("/", "zh-CN");
+
+    expect(await screen.findByRole("link", { name: "后端发布流程" })).toHaveAttribute(
+      "href",
+      "/q/backend-release-workflow--q1#answer-ans1",
+    );
+    expect(screen.getByText("先运行迁移预检，然后部署二进制并验证健康状态。")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(translationRequestBodies()).toEqual(
+        expect.arrayContaining([
+          { resource_id: "q1", resource_type: "question", target_language: "zh-CN" },
+          { resource_id: "ans1", resource_type: "answer", target_language: "zh-CN" },
+        ]),
+      ),
+    );
+
+    const toggles = screen.getAllByRole("button", { name: "查看原文" });
+    expect(toggles).toHaveLength(2);
+
+    await user.click(toggles[0]);
+    expect(screen.getByRole("link", { name: "Backend release workflow" })).toHaveAttribute(
+      "href",
+      "/q/backend-release-workflow--q1#answer-ans1",
+    );
+
+    await user.click(toggles[1]);
+    expect(
+      screen.getByText("Use a preflight migration check, deploy the binary, then verify health and rollback metadata."),
+    ).toBeInTheDocument();
+  });
+
+  it("falls back to original hot answer content while translations are pending or missing", async () => {
+    mockHomeApi({
+      missingTranslationStatus: "not_found",
+      translations: {
+        [translationKey("question", "q1", "zh-CN")]: {
+          resource_id: "q1",
+          resource_type: "question",
+          source_hash: "question-hash",
+          source_language: "en",
+          status: "pending",
+          target_language: "zh-CN",
+          translation_version: 0,
+        },
+      },
+    });
+    renderHomePage("/", "zh-CN");
+
+    expect(await screen.findByRole("link", { name: "Backend release workflow" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Use a preflight migration check, deploy the binary, then verify health and rollback metadata."),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(translationRequestBodies()).toEqual(
+        expect.arrayContaining([
+          { resource_id: "q1", resource_type: "question", target_language: "zh-CN" },
+          { resource_id: "ans1", resource_type: "answer", target_language: "zh-CN" },
+        ]),
+      ),
+    );
+    expect(screen.queryByRole("button", { name: "查看原文" })).not.toBeInTheDocument();
   });
 
   it("keeps dislike and report actions behind the hot answer menu", async () => {

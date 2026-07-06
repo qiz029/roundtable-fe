@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FocusEvent, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LogOut, Plus, Search, ShieldCheck, UserRound, X } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import type { QuestionSummary } from "../api/types";
+import type { PreferredLanguage, PrivateUserProfile, QuestionSummary } from "../api/types";
 import { apiBaseUrl } from "../config";
 import { getErrorMessage, useCurrentUser, useLogout } from "../hooks/useAuth";
 import { textSnippet } from "../hooks/useSeo";
 import { pillToneClass } from "../lib/pills";
 import { questionPath } from "../lib/routes";
 import { buildQuestionSearchHref, normalizeSearchTags, parseSearchInput, rankQuestionSuggestions } from "../lib/search";
+import { languageOptions, normalizePreferredLanguage, readLanguageCookie, writeLanguageCookie } from "../lib/language";
 import { BrandLogo } from "./BrandLogo";
+import { LanguagePreferenceProvider } from "./LanguagePreferenceProvider";
 import { TopbarAvatar } from "./ProfileAvatar";
 
 const TYPEAHEAD_POOL_SIZE = 25;
@@ -18,11 +20,13 @@ const TYPEAHEAD_FILTERED_SIZE = 10;
 const TYPEAHEAD_LIMIT = 5;
 
 export function AppLayout() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useCurrentUser();
   const logout = useLogout();
   const user = currentUser.data;
+  const [language, setLanguage] = useState<PreferredLanguage>(() => readLanguageCookie());
   const searchInputRef = useRef<HTMLInputElement>(null);
   const currentSearchState = useMemo(() => {
     if (location.pathname !== "/") {
@@ -67,6 +71,32 @@ export function AppLayout() {
     staleTime: 10_000,
   });
   const suggestionItems = typeaheadEnabled ? suggestions.data || [] : [];
+  const profile = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: api.getMyProfile,
+    enabled: Boolean(user),
+    retry: false,
+  });
+  const saveLanguage = useMutation({
+    mutationFn: (preferredLanguage: PreferredLanguage) =>
+      api.updateMyProfile({ preferred_language: preferredLanguage }),
+    onSuccess: (result, requestedLanguage) => {
+      queryClient.setQueryData<PrivateUserProfile>(["my-profile"], result);
+      const savedLanguage = result.preferred_language
+        ? normalizePreferredLanguage(result.preferred_language)
+        : requestedLanguage;
+      setLanguage(savedLanguage);
+      writeLanguageCookie(savedLanguage);
+    },
+  });
+
+  useEffect(() => {
+    if (!user || !profile.data?.preferred_language) return;
+
+    const profileLanguage = normalizePreferredLanguage(profile.data.preferred_language);
+    setLanguage(profileLanguage);
+    writeLanguageCookie(profileLanguage);
+  }, [profile.data?.preferred_language, user]);
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
@@ -89,6 +119,16 @@ export function AppLayout() {
   async function handleLogout() {
     await logout.mutateAsync();
     navigate("/");
+  }
+
+  function handleLanguageChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextLanguage = normalizePreferredLanguage(event.target.value);
+    setLanguage(nextLanguage);
+    writeLanguageCookie(nextLanguage);
+
+    if (user) {
+      saveLanguage.mutate(nextLanguage);
+    }
   }
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
@@ -166,126 +206,142 @@ export function AppLayout() {
   }
 
   return (
-    <div className="appShell">
-      <header className="topbar">
-        <Link to="/" className="brand" aria-label="roundtable home">
-          <BrandLogo />
-        </Link>
+    <LanguagePreferenceProvider language={language}>
+      <div className="appShell">
+        <header className="topbar">
+          <Link to="/" className="brand" aria-label="roundtable home">
+            <BrandLogo />
+          </Link>
 
-        <nav className="primaryNav" aria-label="Primary navigation">
+          <nav className="primaryNav" aria-label="Primary navigation">
+            <NavLink to="/">Home</NavLink>
+            <NavLink to="/ask">Ask</NavLink>
+            <NavLink to="/me/agents">Agents</NavLink>
+            <NavLink to="/leaderboards">Leaderboards</NavLink>
+            <NavLink to="/docs">User guide</NavLink>
+          </nav>
+
+          <div className="searchWrap" onBlur={handleSearchBlur} onFocus={() => setIsSearchFocused(true)}>
+            <form className="searchShell" role="search" onSubmit={handleSearchSubmit}>
+              <Search size={15} />
+              {searchTags.map((tag) => (
+                <span className={`pill searchTagPill ${pillToneClass(tag)}`} key={tag}>
+                  <span>#{tag}</span>
+                  <button type="button" aria-label={`Remove #${tag} filter`} onClick={() => handleRemoveSearchTag(tag)}>
+                    <X size={11} />
+                  </button>
+                </span>
+              ))}
+              <input
+                aria-label="Search questions"
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Search questions or #tag..."
+                ref={searchInputRef}
+                type="search"
+                value={searchText}
+              />
+              <kbd>/</kbd>
+            </form>
+
+            {suggestionItems.length ? (
+              <div className="searchSuggestions" role="listbox" aria-label="Question suggestions">
+                {suggestionItems.map((question) => (
+                  <Link
+                    className="searchSuggestion"
+                    key={question.id}
+                    onClick={() => handleSuggestionOpen(question)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    role="option"
+                    to={questionPath(question)}
+                  >
+                    <span className="searchSuggestionTitle">{question.title}</span>
+                    {suggestionExcerpt(question) ? (
+                      <span className="searchSuggestionBody">{suggestionExcerpt(question)}</span>
+                    ) : null}
+                    <span className="searchSuggestionMeta">
+                      <span>{question.answer_count} answers</span>
+                      {question.tags.slice(0, 3).map((tag) => (
+                        <span className="searchSuggestionTag" key={tag}>
+                          #{tag}
+                        </span>
+                      ))}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="topbarActions">
+            <select
+              aria-label="Language"
+              className="languageSelect"
+              disabled={Boolean(user && saveLanguage.isPending)}
+              onChange={handleLanguageChange}
+              title={saveLanguage.error ? getErrorMessage(saveLanguage.error) : "Language"}
+              value={language}
+            >
+              {languageOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <Link to="/ask" className="button buttonPrimary buttonCompact">
+              <Plus size={16} />
+              <span>Ask</span>
+            </Link>
+            {user ? (
+              <>
+                <Link to="/me/profile" title={user.display_name}>
+                  <TopbarAvatar name={user.display_name} url={user.avatar_url} />
+                </Link>
+                <button className="iconButton" onClick={handleLogout} aria-label="Log out">
+                  <LogOut size={17} />
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="button buttonSecondary buttonCompact">
+                <UserRound size={16} />
+                <span>Log in</span>
+              </Link>
+            )}
+          </div>
+        </header>
+
+        <div className="mobileNav">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/ask">Ask</NavLink>
           <NavLink to="/me/agents">Agents</NavLink>
-          <NavLink to="/leaderboards">Leaderboards</NavLink>
+          <NavLink to="/leaderboards">Leaders</NavLink>
           <NavLink to="/docs">User guide</NavLink>
-        </nav>
-
-        <div className="searchWrap" onBlur={handleSearchBlur} onFocus={() => setIsSearchFocused(true)}>
-          <form className="searchShell" role="search" onSubmit={handleSearchSubmit}>
-            <Search size={15} />
-            {searchTags.map((tag) => (
-              <span className={`pill searchTagPill ${pillToneClass(tag)}`} key={tag}>
-                <span>#{tag}</span>
-                <button type="button" aria-label={`Remove #${tag} filter`} onClick={() => handleRemoveSearchTag(tag)}>
-                  <X size={11} />
-                </button>
-              </span>
-            ))}
-            <input
-              aria-label="Search questions"
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Search questions or #tag..."
-              ref={searchInputRef}
-              type="search"
-              value={searchText}
-            />
-            <kbd>/</kbd>
-          </form>
-
-          {suggestionItems.length ? (
-            <div className="searchSuggestions" role="listbox" aria-label="Question suggestions">
-              {suggestionItems.map((question) => (
-                <Link
-                  className="searchSuggestion"
-                  key={question.id}
-                  onClick={() => handleSuggestionOpen(question)}
-                  onMouseDown={(event) => event.preventDefault()}
-                  role="option"
-                  to={questionPath(question)}
-                >
-                  <span className="searchSuggestionTitle">{question.title}</span>
-                  {suggestionExcerpt(question) ? (
-                    <span className="searchSuggestionBody">{suggestionExcerpt(question)}</span>
-                  ) : null}
-                  <span className="searchSuggestionMeta">
-                    <span>{question.answer_count} answers</span>
-                    {question.tags.slice(0, 3).map((tag) => (
-                      <span className="searchSuggestionTag" key={tag}>
-                        #{tag}
-                      </span>
-                    ))}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          ) : null}
+          {user ? <NavLink to="/me/profile">Profile</NavLink> : null}
+          {user ? <button onClick={handleLogout}>Log out</button> : <NavLink to="/login">Log in</NavLink>}
         </div>
 
-        <div className="topbarActions">
-          <Link to="/ask" className="button buttonPrimary buttonCompact">
-            <Plus size={16} />
-            <span>Ask</span>
-          </Link>
-          {user ? (
-            <>
-              <Link to="/me/profile" title={user.display_name}>
-                <TopbarAvatar name={user.display_name} url={user.avatar_url} />
-              </Link>
-              <button className="iconButton" onClick={handleLogout} aria-label="Log out">
-                <LogOut size={17} />
-              </button>
-            </>
-          ) : (
-            <Link to="/login" className="button buttonSecondary buttonCompact">
-              <UserRound size={16} />
-              <span>Log in</span>
-            </Link>
-          )}
-        </div>
-      </header>
+        {user && !user.email_verified ? (
+          <div className="noticeBar">
+            <ShieldCheck size={16} />
+            <span>Your email is not verified yet. Create-agent access unlocks after verification.</span>
+            <Link to="/verify">Verify</Link>
+          </div>
+        ) : null}
 
-      <div className="mobileNav">
-        <NavLink to="/">Home</NavLink>
-        <NavLink to="/ask">Ask</NavLink>
-        <NavLink to="/me/agents">Agents</NavLink>
-        <NavLink to="/leaderboards">Leaders</NavLink>
-        <NavLink to="/docs">User guide</NavLink>
-        {user ? <NavLink to="/me/profile">Profile</NavLink> : null}
-        {user ? <button onClick={handleLogout}>Log out</button> : <NavLink to="/login">Log in</NavLink>}
+        {apiBaseUrl ? (
+          <div className="apiBanner">
+            API <code>{apiBaseUrl}</code>
+          </div>
+        ) : null}
+
+        {currentUser.error && currentUser.error instanceof Error && currentUser.error.name !== "ApiError" ? (
+          <div className="noticeBar noticeError">{getErrorMessage(currentUser.error)}</div>
+        ) : null}
+
+        <main>
+          <Outlet />
+        </main>
       </div>
-
-      {user && !user.email_verified ? (
-        <div className="noticeBar">
-          <ShieldCheck size={16} />
-          <span>Your email is not verified yet. Create-agent access unlocks after verification.</span>
-          <Link to="/verify">Verify</Link>
-        </div>
-      ) : null}
-
-      {apiBaseUrl ? (
-        <div className="apiBanner">
-          API <code>{apiBaseUrl}</code>
-        </div>
-      ) : null}
-
-      {currentUser.error && currentUser.error instanceof Error && currentUser.error.name !== "ApiError" ? (
-        <div className="noticeBar noticeError">{getErrorMessage(currentUser.error)}</div>
-      ) : null}
-
-      <main>
-        <Outlet />
-      </main>
-    </div>
+    </LanguagePreferenceProvider>
   );
 }
 

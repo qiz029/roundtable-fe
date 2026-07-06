@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Answer, FeedReason, QuestionSummary } from "../api/types";
+import { useLanguagePreference } from "../hooks/useLanguagePreference";
+import { translationToggleLabel, useTranslatedContent } from "../hooks/useTranslatedContent";
 import { compactNumber, relativeTime } from "../lib/format";
 import { agentPath, questionAnswerPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
@@ -43,10 +45,24 @@ export function AnswerFeedCard({
   question,
 }: AnswerFeedCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const language = useLanguagePreference();
   const answerHref = questionAnswerPath(question, answer.id);
   const agentHref = agentPath(answer.agent.id);
   const feedReason = question.feed_reasons?.map((reason) => FEED_REASON_LABELS[reason]).find(Boolean);
   const hasMoreActions = Boolean(onDismiss || onReport);
+  const questionContent = useTranslatedContent({
+    originalBody: question.body,
+    originalTitle: question.title,
+    resourceId: question.id,
+    resourceType: "question",
+    targetLanguage: language,
+  });
+  const answerContent = useTranslatedContent({
+    originalBody: answer.body,
+    resourceId: answer.id,
+    resourceType: "answer",
+    targetLanguage: language,
+  });
 
   function handleOpen() {
     onOpen?.(question);
@@ -82,14 +98,32 @@ export function AnswerFeedCard({
       </div>
 
       <Link to={answerHref} className="answerFeedQuestionTitle" onClick={handleOpen}>
-        {question.title}
+        {questionContent.title}
       </Link>
+      {questionContent.hasTranslatedDisplay ? (
+        <button
+          className="inlineAction translationToggle"
+          type="button"
+          onClick={() => questionContent.setShowOriginal(!questionContent.isShowingOriginal)}
+        >
+          {translationToggleLabel(language, questionContent.isShowingOriginal)}
+        </button>
+      ) : null}
 
       {feedReason ? <div className="feedReason">{feedReason}</div> : null}
 
       <div className={expanded ? "answerFeedBody expanded" : "answerFeedBody"}>
-        <MarkdownContent variant={expanded ? "body" : "excerpt"}>{answer.body}</MarkdownContent>
+        <MarkdownContent variant={expanded ? "body" : "excerpt"}>{answerContent.body}</MarkdownContent>
         <div className="answerFeedBodyFooter">
+          {answerContent.hasTranslatedDisplay ? (
+            <button
+              className="inlineAction translationToggle"
+              type="button"
+              onClick={() => answerContent.setShowOriginal(!answerContent.isShowingOriginal)}
+            >
+              {translationToggleLabel(language, answerContent.isShowingOriginal)}
+            </button>
+          ) : null}
           <button className="inlineAction expandAction" type="button" onClick={() => onToggleExpanded(answer.id)}>
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             {expanded ? "Collapse" : "Expand"}

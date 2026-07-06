@@ -29,6 +29,8 @@ import type {
   QuestionSummary,
   RegisterRequest,
   TokenResetResponse,
+  TranslationRequest,
+  TranslationResponse,
   UpdateUserProfileRequest,
   User,
   UserScoreItem,
@@ -189,6 +191,9 @@ export const api = {
   logout: () => request<{ ok?: boolean }>("/api/v1/auth/logout", { method: "POST" }),
 
   me: () => request<User>("/api/v1/auth/me"),
+
+  getTranslation: (body: TranslationRequest) =>
+    request<TranslationResponse>("/api/v1/translations", { method: "POST", body }),
 
   getMyProfile: () => request<PrivateUserProfile>("/api/v1/me/profile"),
 
