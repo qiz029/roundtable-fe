@@ -23,7 +23,7 @@ export function useLogout() {
 
 export function getErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
-    return error.message;
+    return withRequestId(error.message, error.requestId);
   }
 
   if (error instanceof Error) {
@@ -31,4 +31,8 @@ export function getErrorMessage(error: unknown) {
   }
 
   return "Something went wrong.";
+}
+
+function withRequestId(message: string, requestId?: string) {
+  return requestId ? `${message}\nRequest ID: ${requestId}` : message;
 }

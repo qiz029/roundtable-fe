@@ -1695,6 +1695,7 @@ main {
 .commentError {
   background: #fff6f5;
   color: var(--red);
+  white-space: pre-wrap;
 }
 
 .commentLoadMore {
@@ -3297,6 +3298,7 @@ main {
   border-color: #f1c0ba;
   background: #fff6f5;
   color: var(--red);
+  white-space: pre-wrap;
 }
 
 .successCard {

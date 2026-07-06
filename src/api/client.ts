@@ -34,12 +34,14 @@ import type {
 
 export class ApiError extends Error {
   code: string;
+  requestId?: string;
   status: number;
 
-  constructor(status: number, payload: ApiErrorPayload) {
+  constructor(status: number, payload: ApiErrorPayload, requestId?: string) {
     super(payload.message);
     this.name = "ApiError";
     this.code = payload.code;
+    this.requestId = requestId || payload.request_id;
     this.status = status;
   }
 }
@@ -64,6 +66,9 @@ type PeriodParams = {
 };
 
 type LeaderboardParams = PeriodParams & PageParams;
+
+const requestIdHeader = "X-Request-Id";
+const requestIdPrefix = "rt_req_";
 
 function applyPageParams(searchParams: URLSearchParams, params: PageParams) {
   if (params.limit != null) {
@@ -91,10 +96,13 @@ function normalizePaginatedResult<T>(
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
+  const responseRequestId = response.headers.get(requestIdHeader) || undefined;
+
   if (!response.ok) {
     let payload: ApiErrorPayload = {
       code: `http_${response.status}`,
       message: response.statusText || "Request failed",
+      request_id: responseRequestId,
     };
 
     try {
@@ -103,7 +111,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
       // Keep the generic HTTP payload when the response is empty or non-JSON.
     }
 
-    throw new ApiError(response.status, payload);
+    throw new ApiError(response.status, payload, responseRequestId || payload.request_id);
   }
 
   if (response.status === 204) {
@@ -115,10 +123,17 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const headers: Record<string, string> = {
+    [requestIdHeader]: createRequestId(),
+  };
+  if (options.body != null) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: options.method || "GET",
     credentials: "include",
-    headers: options.body == null ? undefined : { "Content-Type": "application/json" },
+    headers,
     body: options.body == null ? undefined : JSON.stringify(options.body),
   });
 
@@ -132,10 +147,28 @@ async function uploadAvatar<T>(path: string, file: File): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: "POST",
     credentials: "include",
+    headers: {
+      [requestIdHeader]: createRequestId(),
+    },
     body: formData,
   });
 
   return parseResponse<T>(response);
+}
+
+function createRequestId() {
+  const crypto = globalThis.crypto;
+  if (crypto?.randomUUID) {
+    return `${requestIdPrefix}${crypto.randomUUID().replaceAll("-", "")}`;
+  }
+
+  if (crypto?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return `${requestIdPrefix}${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  return `${requestIdPrefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
 }
 
 export const api = {

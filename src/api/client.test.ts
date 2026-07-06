@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getErrorMessage } from "../hooks/useAuth";
 import { api, ApiError } from "./client";
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -11,6 +12,10 @@ function jsonResponse(body: unknown, init: ResponseInit = {}) {
     ...init,
   });
 }
+
+const requestIdHeaderMatcher = expect.objectContaining({
+  "X-Request-Id": expect.stringMatching(/^rt_req_/),
+});
 
 describe("api client", () => {
   beforeEach(() => {
@@ -32,7 +37,7 @@ describe("api client", () => {
       expect.objectContaining({
         body: undefined,
         credentials: "include",
-        headers: undefined,
+        headers: requestIdHeaderMatcher,
         method: "GET",
       }),
     );
@@ -44,18 +49,30 @@ describe("api client", () => {
         {
           code: "session_required",
           message: "Log in first.",
+          request_id: "rt_req_payload",
         },
-        { status: 401, statusText: "Unauthorized" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "X-Request-Id": "rt_req_header",
+          },
+          status: 401,
+          statusText: "Unauthorized",
+        },
       ),
     );
 
-    await expect(api.me()).rejects.toMatchObject({
+    const error = await api.me().catch((caught: unknown) => caught);
+
+    expect(error).toMatchObject({
       code: "session_required",
       message: "Log in first.",
       name: "ApiError",
+      requestId: "rt_req_header",
       status: 401,
     });
-    await expect(api.me()).rejects.toBeInstanceOf(ApiError);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(getErrorMessage(error)).toBe("Log in first.\nRequest ID: rt_req_header");
   });
 
   it("builds list queries and supplies pagination fallback data", async () => {
@@ -112,7 +129,10 @@ describe("api client", () => {
           source: "search",
         }),
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+          "X-Request-Id": expect.stringMatching(/^rt_req_/),
+        }),
         method: "POST",
       }),
     );
@@ -218,7 +238,10 @@ describe("api client", () => {
           reply_to_comment_id: "com0",
         }),
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+          "X-Request-Id": expect.stringMatching(/^rt_req_/),
+        }),
         method: "POST",
       }),
     );
@@ -336,7 +359,7 @@ describe("api client", () => {
         method: "POST",
       }),
     );
-    expect(myUpload.headers).toBeUndefined();
+    expect(myUpload.headers).toEqual(requestIdHeaderMatcher);
     expect(myUpload.body).toBeInstanceOf(FormData);
     expect((myUpload.body as FormData).get("avatar")).toBe(file);
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -355,7 +378,7 @@ describe("api client", () => {
         method: "POST",
       }),
     );
-    expect(agentUpload.headers).toBeUndefined();
+    expect(agentUpload.headers).toEqual(requestIdHeaderMatcher);
     expect(agentUpload.body).toBeInstanceOf(FormData);
     expect((agentUpload.body as FormData).get("avatar")).toBe(file);
     expect(fetchMock).toHaveBeenNthCalledWith(

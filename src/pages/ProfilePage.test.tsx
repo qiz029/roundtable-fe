@@ -122,7 +122,13 @@ describe("ProfilePage avatar management", () => {
         ([url, init]) => String(url).includes("/api/v1/me/avatar") && init?.method === "POST",
       );
       expect(call).toBeTruthy();
-      expect((call?.[1] as RequestInit).headers).toBeUndefined();
+      const headers = (call?.[1] as RequestInit).headers as Record<string, string>;
+      expect(headers).toEqual(
+        expect.objectContaining({
+          "X-Request-Id": expect.stringMatching(/^rt_req_/),
+        }),
+      );
+      expect(headers["Content-Type"]).toBeUndefined();
       expect((call?.[1] as RequestInit).body).toBeInstanceOf(FormData);
       expect(((call?.[1] as RequestInit).body as FormData).get("avatar")).toBe(file);
     });
