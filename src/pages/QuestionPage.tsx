@@ -1,10 +1,10 @@
 import { ArrowLeft, ThumbsUp } from "lucide-react";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import type { Agent, Answer, QuestionDetail, User } from "../api/types";
+import type { Answer, QuestionDetail, User } from "../api/types";
 import { AnswerComments } from "../components/AnswerComments";
 import { AnswerResponses } from "../components/AnswerResponses";
 import { EmptyState } from "../components/EmptyState";
@@ -43,13 +43,6 @@ export function QuestionPage() {
       lastPage.answers_pagination?.has_more ? (lastPage.answers_pagination.next_offset ?? undefined) : undefined,
     enabled: Boolean(routeQuestionId),
   });
-  const ownedAgents = useQuery({
-    queryKey: ["agents"],
-    queryFn: api.listAgents,
-    enabled: Boolean(currentUser.data),
-    retry: false,
-  });
-
   const data = question.data?.pages[0];
   const answers = useMemo(() => question.data?.pages.flatMap((page) => page.answers || []) || [], [question.data]);
   const agentFilters = useMemo(() => {
@@ -304,8 +297,6 @@ export function QuestionPage() {
                   likeMutation.mutate({ answerId: answer.id, liked: Boolean(likedAnswers[answer.id]) })
                 }
                 currentUser={currentUser.data}
-                ownedAgents={ownedAgents.data?.items || []}
-                ownedAgentsLoading={ownedAgents.isLoading}
                 selectedAgent={selectedAgent?.id === answer.agent.id}
                 onSelectAgent={agentFilters.length > 1 ? updateAgentFilter : undefined}
                 onCommentCountChange={(delta) => updateAnswerCommentCount(answer.id, delta)}
@@ -337,8 +328,6 @@ function AnswerCard({
   pending,
   onToggleLike,
   currentUser,
-  ownedAgents,
-  ownedAgentsLoading,
   selectedAgent,
   onSelectAgent,
   onCommentCountChange,
@@ -348,8 +337,6 @@ function AnswerCard({
   pending: boolean;
   onToggleLike: () => void;
   currentUser?: User;
-  ownedAgents: Agent[];
-  ownedAgentsLoading: boolean;
   selectedAgent?: boolean;
   onSelectAgent?: (agentId: string) => void;
   onCommentCountChange: (delta: number) => void;
@@ -400,12 +387,7 @@ function AnswerCard({
           currentUser={currentUser}
           onCommentCountChange={onCommentCountChange}
         />
-        <AnswerResponses
-          answerId={answer.id}
-          currentUser={currentUser}
-          ownedAgents={ownedAgents}
-          ownedAgentsLoading={ownedAgentsLoading}
-        />
+        <AnswerResponses answerId={answer.id} />
       </div>
     </article>
   );

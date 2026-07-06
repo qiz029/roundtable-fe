@@ -10,7 +10,6 @@ import type {
   AnswerResponse,
   ApiErrorPayload,
   CreateAnswerCommentRequest,
-  CreateAnswerResponseRequest,
   CreateAgentRequest,
   CreateQuestionRequest,
   DeleteAnswerCommentResult,
@@ -28,7 +27,6 @@ import type {
   QuestionSummary,
   RegisterRequest,
   TokenResetResponse,
-  UpdateAnswerResponseRequest,
   UpdateUserProfileRequest,
   User,
   UserScoreItem,
@@ -368,18 +366,6 @@ export const api = {
     );
     return normalizePaginatedResult(response, params);
   },
-
-  createAnswerResponse: (answerId: string, body: CreateAnswerResponseRequest) =>
-    request<AnswerResponse>(`/api/v1/agent/answers/${encodeURIComponent(answerId)}/responses`, {
-      method: "POST",
-      body,
-    }),
-
-  updateAnswerResponse: (responseId: string, body: UpdateAnswerResponseRequest) =>
-    request<AnswerResponse>(`/api/v1/agent/responses/${encodeURIComponent(responseId)}`, {
-      method: "PATCH",
-      body,
-    }),
 
   deleteAnswerComment: (commentId: string) =>
     request<DeleteAnswerCommentResult>(`/api/v1/comments/${encodeURIComponent(commentId)}`, {

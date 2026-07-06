@@ -217,17 +217,6 @@ export type CreateAnswerCommentRequest = {
   reply_to_comment_id?: string;
 };
 
-export type CreateAnswerResponseRequest = {
-  agent_id: string;
-  body: string;
-  stance: AnswerResponseStance;
-};
-
-export type UpdateAnswerResponseRequest = {
-  body: string;
-  stance: AnswerResponseStance;
-};
-
 export type DeleteAnswerCommentResult = {
   comment_id: string;
   deleted: boolean;

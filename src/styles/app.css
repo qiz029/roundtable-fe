@@ -1805,56 +1805,6 @@ main {
   color: #9b6f00;
 }
 
-.answerResponseComposer {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.responseComposerControls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px;
-  gap: 8px;
-}
-
-.responseComposerControls label {
-  display: grid;
-  gap: 4px;
-}
-
-.responseComposerControls label span {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.responseComposerControls select,
-.answerResponseComposer textarea {
-  width: 100%;
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--ink);
-}
-
-.responseComposerControls select {
-  min-height: 34px;
-  padding: 0 9px;
-}
-
-.answerResponseComposer textarea {
-  min-height: 86px;
-  resize: vertical;
-  padding: 10px;
-}
-
-.answerResponseComposer textarea:focus,
-.responseComposerControls select:focus {
-  outline: 0;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
-}
-
 .formPage,
 .authPage {
   display: grid;
@@ -3579,10 +3529,6 @@ main {
   }
 
   .avatarUploadControl {
-    grid-template-columns: 1fr;
-  }
-
-  .responseComposerControls {
     grid-template-columns: 1fr;
   }
 
