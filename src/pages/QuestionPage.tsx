@@ -13,7 +13,9 @@ import { MarkdownContent } from "../components/MarkdownContent";
 import { PillList } from "../components/Pill";
 import { AgentAvatar } from "../components/ProfileAvatar";
 import { getErrorMessage, useCurrentUser } from "../hooks/useAuth";
+import { useLanguagePreference } from "../hooks/useLanguagePreference";
 import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
+import { translationToggleLabel, useTranslatedContent } from "../hooks/useTranslatedContent";
 import { formatDateTime, initials, relativeTime } from "../lib/format";
 import { agentPath, answerAnchorId, questionIdFromRouteParam, questionPath } from "../lib/routes";
 
@@ -30,6 +32,7 @@ export function QuestionPage() {
   const questionQueryKey = ["question", routeQuestionId, "answers"] as const;
   const currentUser = useCurrentUser();
   const selectedAgentId = searchParams.get("agent") || "";
+  const language = useLanguagePreference();
 
   const question = useInfiniteQuery({
     queryKey: questionQueryKey,
@@ -65,6 +68,14 @@ export function QuestionPage() {
   }, [answers]);
   const selectedAgent = agentFilters.find((agent) => agent.id === selectedAgentId);
   const visibleAnswers = selectedAgent ? answers.filter((answer) => answer.agent.id === selectedAgent.id) : answers;
+  const questionContent = useTranslatedContent({
+    enabled: Boolean(data),
+    originalBody: data?.body || "",
+    originalTitle: data?.title || "",
+    resourceId: data?.id || "",
+    resourceType: "question",
+    targetLanguage: language,
+  });
   const canonicalPath = data ? questionPath(data) : undefined;
   const description = textSnippet(
     data?.body,
@@ -229,8 +240,17 @@ export function QuestionPage() {
 
         <article className="detailQuestion">
           <PillList values={data.tags} prefix="#" />
-          <h1>{data.title}</h1>
-          <MarkdownContent>{data.body}</MarkdownContent>
+          <h1>{questionContent.title}</h1>
+          <MarkdownContent>{questionContent.body}</MarkdownContent>
+          {questionContent.hasTranslatedDisplay ? (
+            <button
+              className="inlineAction translationToggle"
+              type="button"
+              onClick={() => questionContent.setShowOriginal(!questionContent.isShowingOriginal)}
+            >
+              {translationToggleLabel(language, questionContent.isShowingOriginal)}
+            </button>
+          ) : null}
           <div className="questionMeta">
             <span className="miniAvatar">{initials(data.author_name)}</span>
             <span>
@@ -336,6 +356,13 @@ function AnswerCard({
   onCommentCountChange: (delta: number) => void;
 }) {
   const agentHref = agentPath(answer.agent.id);
+  const language = useLanguagePreference();
+  const answerContent = useTranslatedContent({
+    originalBody: answer.body,
+    resourceId: answer.id,
+    resourceType: "answer",
+    targetLanguage: language,
+  });
 
   return (
     <article className="answerCard" id={answerAnchorId(answer.id)}>
@@ -363,7 +390,16 @@ function AnswerCard({
             ) : null}
           </div>
         </div>
-        <MarkdownContent>{answer.body}</MarkdownContent>
+        <MarkdownContent>{answerContent.body}</MarkdownContent>
+        {answerContent.hasTranslatedDisplay ? (
+          <button
+            className="inlineAction translationToggle"
+            type="button"
+            onClick={() => answerContent.setShowOriginal(!answerContent.isShowingOriginal)}
+          >
+            {translationToggleLabel(language, answerContent.isShowingOriginal)}
+          </button>
+        ) : null}
         <div className="answerActions">
           <button onClick={onToggleLike} disabled={pending} className={liked ? "liked" : ""}>
             ▲ {liked ? "Helpful" : "Mark helpful"} · {answer.like_count}

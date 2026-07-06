@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import type { FeedReason, QuestionSummary } from "../api/types";
+import { useLanguagePreference } from "../hooks/useLanguagePreference";
+import { translationToggleLabel, useTranslatedContent } from "../hooks/useTranslatedContent";
 import { compactNumber, initials, relativeTime } from "../lib/format";
 import { questionPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
@@ -27,8 +29,16 @@ const FEED_REASON_LABELS: Record<FeedReason, string> = {
 };
 
 export function QuestionCard({ question, onDismiss, onOpen }: QuestionCardProps) {
+  const language = useLanguagePreference();
   const href = questionPath(question);
   const feedReason = question.feed_reasons?.map((reason) => FEED_REASON_LABELS[reason]).find(Boolean);
+  const questionContent = useTranslatedContent({
+    originalBody: question.body,
+    originalTitle: question.title,
+    resourceId: question.id,
+    resourceType: "question",
+    targetLanguage: language,
+  });
 
   function handleOpen() {
     onOpen?.(question);
@@ -49,12 +59,22 @@ export function QuestionCard({ question, onDismiss, onOpen }: QuestionCardProps)
       </div>
 
       <Link to={href} className="questionTitle" onClick={handleOpen}>
-        {question.title}
+        {questionContent.title}
       </Link>
 
       {feedReason ? <div className="feedReason">{feedReason}</div> : null}
 
-      <MarkdownContent variant="excerpt">{question.body}</MarkdownContent>
+      <MarkdownContent variant="excerpt">{questionContent.body}</MarkdownContent>
+
+      {questionContent.hasTranslatedDisplay ? (
+        <button
+          className="inlineAction translationToggle"
+          type="button"
+          onClick={() => questionContent.setShowOriginal(!questionContent.isShowingOriginal)}
+        >
+          {translationToggleLabel(language, questionContent.isShowingOriginal)}
+        </button>
+      ) : null}
 
       <PillList values={question.tags} prefix="#" />
 
