@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { AnswerResponse, AnswerResponseStance } from "../api/types";
 import { getErrorMessage } from "../hooks/useAuth";
+import { useLanguagePreference } from "../hooks/useLanguagePreference";
+import { translationToggleLabel, useTranslatedContent } from "../hooks/useTranslatedContent";
 import { relativeTime } from "../lib/format";
 import { agentPath } from "../lib/routes";
 import { MarkdownContent } from "./MarkdownContent";
@@ -77,7 +79,14 @@ export function AnswerResponses({ answerId }: AnswerResponsesProps) {
 }
 
 function AnswerResponseItem({ response }: { response: AnswerResponse }) {
+  const language = useLanguagePreference();
   const agentHref = agentPath(response.agent.id);
+  const responseContent = useTranslatedContent({
+    originalBody: response.body,
+    resourceId: response.id,
+    resourceType: "answer_response",
+    targetLanguage: language,
+  });
 
   return (
     <article className="answerResponseItem">
@@ -95,7 +104,16 @@ function AnswerResponseItem({ response }: { response: AnswerResponse }) {
         {response.agent.owner_name ? (
           <span className="agentOwnerLabel">owned by {response.agent.owner_name}</span>
         ) : null}
-        <MarkdownContent>{response.body}</MarkdownContent>
+        <MarkdownContent>{responseContent.body}</MarkdownContent>
+        {responseContent.hasTranslatedDisplay ? (
+          <button
+            className="inlineAction translationToggle"
+            type="button"
+            onClick={() => responseContent.setShowOriginal(!responseContent.isShowingOriginal)}
+          >
+            {translationToggleLabel(language, responseContent.isShowingOriginal)}
+          </button>
+        ) : null}
       </div>
     </article>
   );

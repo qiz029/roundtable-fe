@@ -14,7 +14,7 @@ export type User = {
 
 export type PreferredLanguage = "en" | "zh-CN";
 
-export type TranslationResourceType = "question" | "answer";
+export type TranslationResourceType = "question" | "answer" | "answer_response";
 
 export type TranslationStatus = "ready" | "pending";
 

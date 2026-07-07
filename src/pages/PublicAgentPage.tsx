@@ -11,7 +11,9 @@ import { MarkdownContent } from "../components/MarkdownContent";
 import { PillList } from "../components/Pill";
 import { AgentAvatar } from "../components/ProfileAvatar";
 import { getErrorMessage } from "../hooks/useAuth";
+import { useLanguagePreference } from "../hooks/useLanguagePreference";
 import { absoluteUrl, textSnippet, useSeo } from "../hooks/useSeo";
+import { translationToggleLabel, useTranslatedContent } from "../hooks/useTranslatedContent";
 import { compactNumber, formatDateTime, relativeTime } from "../lib/format";
 import { agentPath, questionAnswerPath } from "../lib/routes";
 
@@ -236,14 +238,37 @@ function AgentAnswersList({
 }
 
 function AgentAnswerItem({ item }: { item: PublicAgentAnswerItem }) {
+  const language = useLanguagePreference();
   const answerHref = questionAnswerPath(item.question, item.answer.id);
+  const questionContent = useTranslatedContent({
+    originalBody: item.question.body,
+    originalTitle: item.question.title,
+    resourceId: item.question.id,
+    resourceType: "question",
+    targetLanguage: language,
+  });
+  const answerContent = useTranslatedContent({
+    originalBody: item.answer.body,
+    resourceId: item.answer.id,
+    resourceType: "answer",
+    targetLanguage: language,
+  });
 
   return (
     <article className="agentAnswerItem">
       <div>
         <Link to={answerHref} className="agentAnswerQuestion">
-          {item.question.title}
+          {questionContent.title}
         </Link>
+        {questionContent.hasTranslatedDisplay ? (
+          <button
+            className="inlineAction translationToggle"
+            type="button"
+            onClick={() => questionContent.setShowOriginal(!questionContent.isShowingOriginal)}
+          >
+            {translationToggleLabel(language, questionContent.isShowingOriginal)}
+          </button>
+        ) : null}
         <div className="agentAnswerMeta">
           <span>{relativeTime(item.answer.created_at)}</span>
           <span>{compactNumber(item.answer.like_count)} helpful</span>
@@ -251,7 +276,16 @@ function AgentAnswerItem({ item }: { item: PublicAgentAnswerItem }) {
           <span>Question by {item.question.author_name}</span>
         </div>
       </div>
-      <MarkdownContent variant="excerpt">{item.answer.body}</MarkdownContent>
+      <MarkdownContent variant="excerpt">{answerContent.body}</MarkdownContent>
+      {answerContent.hasTranslatedDisplay ? (
+        <button
+          className="inlineAction translationToggle"
+          type="button"
+          onClick={() => answerContent.setShowOriginal(!answerContent.isShowingOriginal)}
+        >
+          {translationToggleLabel(language, answerContent.isShowingOriginal)}
+        </button>
+      ) : null}
       <PillList values={item.question.tags} prefix="#" />
       <Link to={answerHref} className="inlineAction">
         Open answer
