@@ -351,6 +351,19 @@ describe("QuestionPage translations", () => {
           },
           translation_version: 1,
         },
+        [translationKey("answer_response", "rsp1", "zh-CN")]: {
+          resource_id: "rsp1",
+          resource_type: "answer_response",
+          source_hash: "response-hash",
+          source_language: "en",
+          status: "ready",
+          target_language: "zh-CN",
+          translation: {
+            body: "这里缺少部署后的验证窗口。",
+            title: "",
+          },
+          translation_version: 1,
+        },
       },
     });
     const { container } = renderQuestionPage("/q/backend-release-workflow--q1", "zh-CN");
@@ -358,25 +371,30 @@ describe("QuestionPage translations", () => {
     expect(await screen.findByRole("heading", { name: "后端发布流程" })).toBeInTheDocument();
     expect(screen.getByText("部署和迁移检查清单")).toBeInTheDocument();
     expect(screen.getByText("部署前先运行迁移预检。")).toBeInTheDocument();
-    expect(await screen.findByText("This misses the post-deploy verification window.")).toBeInTheDocument();
+    expect(await screen.findByText("这里缺少部署后的验证窗口。")).toBeInTheDocument();
+    expect(screen.queryByText("This misses the post-deploy verification window.")).not.toBeInTheDocument();
     expect(container.querySelector("#answer-ans1")).toBeInTheDocument();
     await waitFor(() =>
       expect(translationRequestBodies()).toEqual(
         expect.arrayContaining([
           { resource_id: "q1", resource_type: "question", target_language: "zh-CN" },
           { resource_id: "ans1", resource_type: "answer", target_language: "zh-CN" },
+          { resource_id: "rsp1", resource_type: "answer_response", target_language: "zh-CN" },
         ]),
       ),
     );
 
     const toggles = screen.getAllByRole("button", { name: "查看原文" });
-    expect(toggles.length).toBeGreaterThanOrEqual(2);
+    expect(toggles.length).toBeGreaterThanOrEqual(3);
 
     await user.click(toggles[0]);
     expect(screen.getByRole("heading", { name: "Backend release workflow" })).toBeInTheDocument();
 
     await user.click(toggles[1]);
     expect(screen.getByText("Run the migration preflight before deploy.")).toBeInTheDocument();
+
+    await user.click(toggles[2]);
+    expect(screen.getByText("This misses the post-deploy verification window.")).toBeInTheDocument();
   });
 
   it("renders original detail content while translations are pending or missing", async () => {

@@ -3,6 +3,8 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import type { PreferredLanguage, TranslationResponse } from "../api/types";
+import { LanguagePreferenceProvider } from "../components/LanguagePreferenceProvider";
 import { PublicAgentPage } from "./PublicAgentPage";
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -60,7 +62,7 @@ function agentAnswer() {
   };
 }
 
-function renderPublicAgentPage(initialEntry = "/agents/agt1") {
+function renderPublicAgentPage(initialEntry = "/agents/agt1", language: PreferredLanguage = "en") {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -74,14 +76,41 @@ function renderPublicAgentPage(initialEntry = "/agents/agt1") {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <LanguagePreferenceProvider language={language}>
+        <RouterProvider router={router} />
+      </LanguagePreferenceProvider>
     </QueryClientProvider>,
   );
 }
 
-function mockAgentApi() {
-  fetchMock.mockImplementation((input: string | URL | Request) => {
+function translationKey(resourceType: string, resourceId: string, targetLanguage: string) {
+  return `${resourceType}:${resourceId}:${targetLanguage}`;
+}
+
+function mockAgentApi(translations: Record<string, TranslationResponse> = {}) {
+  fetchMock.mockImplementation((input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
+
+    if (url.includes("/api/v1/translations")) {
+      const body = JSON.parse(String(init?.body || "{}")) as {
+        resource_id?: string;
+        resource_type?: string;
+        target_language?: string;
+      };
+      const cached =
+        translations[translationKey(body.resource_type || "", body.resource_id || "", body.target_language || "")];
+
+      if (cached) {
+        return Promise.resolve(jsonResponse(cached));
+      }
+
+      return Promise.resolve(
+        jsonResponse(
+          { code: "translation_not_found", message: "Translation not found." },
+          { status: 404, statusText: "Not Found" },
+        ),
+      );
+    }
 
     if (url.includes("/api/v1/agents/agt1/answers")) {
       return Promise.resolve(
@@ -153,4 +182,62 @@ describe("PublicAgentPage", () => {
     );
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/api/v1/me/agents"))).toBe(false);
   });
+
+  it("shows public agent answers in the selected language when translations are ready", async () => {
+    const user = userEvent.setup();
+    mockAgentApi({
+      [translationKey("answer", "ans1", "zh-CN")]: {
+        resource_id: "ans1",
+        resource_type: "answer",
+        source_hash: "answer-hash",
+        source_language: "en",
+        status: "ready",
+        target_language: "zh-CN",
+        translation: {
+          body: "部署前先运行迁移预检。",
+          title: "",
+        },
+        translation_version: 1,
+      },
+      [translationKey("question", "q1", "zh-CN")]: {
+        resource_id: "q1",
+        resource_type: "question",
+        source_hash: "question-hash",
+        source_language: "en",
+        status: "ready",
+        target_language: "zh-CN",
+        translation: {
+          body: "部署和迁移检查清单",
+          title: "后端发布流程",
+        },
+        translation_version: 1,
+      },
+    });
+    renderPublicAgentPage("/agents/agt1", "zh-CN");
+
+    await screen.findByRole("heading", { name: "ReleaseBot" });
+    await user.click(screen.getByRole("button", { name: /Answers/ }));
+
+    expect(await screen.findByRole("link", { name: "后端发布流程" })).toHaveAttribute(
+      "href",
+      "/q/backend-release-workflow--q1#answer-ans1",
+    );
+    expect(screen.getByText("部署前先运行迁移预检。")).toBeInTheDocument();
+    expect(screen.queryByText("Backend release workflow")).not.toBeInTheDocument();
+    expect(screen.queryByText("Run the migration preflight before deploy.")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(translationRequestBodies()).toEqual(
+        expect.arrayContaining([
+          { resource_id: "q1", resource_type: "question", target_language: "zh-CN" },
+          { resource_id: "ans1", resource_type: "answer", target_language: "zh-CN" },
+        ]),
+      );
+    });
+  });
 });
+
+function translationRequestBodies() {
+  return fetchMock.mock.calls
+    .filter(([url]) => String(url).includes("/api/v1/translations"))
+    .map(([, init]) => JSON.parse(String(init?.body || "{}")));
+}
